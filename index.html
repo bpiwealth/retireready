@@ -363,7 +363,13 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
   .pdf-cover h1{font-size:20pt;font-weight:700;color:#fff;margin-bottom:5pt}
   .pdf-cover .sub{font-size:8.5pt;color:rgba(255,255,255,.75);margin-top:4pt}
   .pdf-cover .gold{color:#C9A84C;font-size:8.5pt;font-weight:700;margin-bottom:8pt;display:block;text-transform:uppercase;letter-spacing:.07em}
-  .pdf-sec{padding:14pt 32pt;border-bottom:.5pt solid #eee;page-break-inside:avoid}
+  .pdf-sec{padding:14pt 32pt;border-bottom:.5pt solid #eee;page-break-inside:auto}
+  .pdf-sec.newpage{page-break-before:always}
+  .pdf-sec-title{page-break-after:avoid}
+  .pdf-stat,.pdf-verdict,.pdf-row{page-break-inside:avoid}
+  .pdf-2col{page-break-inside:avoid}
+  .pdf-ht{page-break-inside:auto}
+  .pdf-ht tr{page-break-inside:avoid}
   .pdf-sec-title{font-size:8.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:9pt;padding-bottom:3pt;border-bottom:1.5pt solid #9B1B2A;color:#9B1B2A}
   .pdf-sec-title.navy{border-bottom-color:#1a2e4a;color:#1a2e4a}
   .pdf-verdict{padding:10pt 12pt;margin-bottom:10pt;border-radius:3pt;border-left:3pt solid #9B1B2A;background:#fdf4f5}
@@ -382,7 +388,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
   .pdf-row{display:flex;justify-content:space-between;padding:3pt 0;border-bottom:.5pt solid #f2f2f2}
   .pdf-row-lbl{font-size:8pt;color:#555}
   .pdf-row-val{font-size:8.5pt;font-weight:700}
-  .pdf-sc-box{border:.5pt solid #eee;border-radius:3pt;padding:9pt 11pt;margin-bottom:7pt}
+  .pdf-sc-box{border:.5pt solid #eee;border-radius:3pt;padding:9pt 11pt;margin-bottom:7pt;page-break-inside:avoid}
   .pdf-sc-box h3{font-size:9pt;font-weight:700;margin-bottom:3pt}
   .pdf-sc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7pt;margin-top:5pt}
   .pdf-ht{width:100%;border-collapse:collapse;font-size:7.5pt;margin-top:7pt}
@@ -997,6 +1003,12 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
         <div class="hint" id="capBuildNote" style="margin-top:10px;line-height:1.55"></div>
       </div>
 
+      <div style="text-align:center;margin-top:20px">
+        <button class="btn btn-ruby" onclick="switchRTab(1,null)">Proceed to Retirement Planning
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
     </div><!-- /rtab0 pre-retirement -->
 
     <!-- ══ RETIREMENT TAB ══ -->
@@ -1347,7 +1359,14 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
  *      NOTE: the Tab 1 capital is spent down as the nest egg; it does NOT also throw off a
  *      separate annual investment income, which would count the same money twice.
  *  totalFundRequired  = pvGA(gap, inf, r, n) × (1+r)                [annuity-due]
- *  sustainableExpense = netCash / pvGA(1, inf, r, n) + annualIncome
+ *  sustainableExpense = netCash / (pvGA(1, inf, r, n) × (1+r)) + annualIncome
+ *
+ *  ONE CONVENTION THROUGHOUT: withdrawals happen at the START of each year, then the
+ *  balance grows. A retiree needs January's money in January, not after a full year of
+ *  return on it. The target, the sustainable spend, every drawdown schedule and the
+ *  chart glide paths all use this. Mixing conventions (a due target against an
+ *  end-of-year drawdown) opened a band of capital ~(1+r) wide in which a client was
+ *  told they had a gap AND that their fund lasted the full period.
  *
  * ESTATE FORMULAS (from BPI WPFO Legitime Calculator + TRAIN Law):
  *  grossEstate        = cash + deposits + investments + familyHomeShare + otherRealEstate
@@ -1392,8 +1411,13 @@ function handleCurrencyInput(el){
 
 /* ── GROWING ANNUITY PV (annuity-immediate) ── */
 function pvGA(pmt,g,r,n){
-  if(n<=0||r<=0)return 0;
-  if(Math.abs(r-g)<1e-10)return pmt*n/(1+r);
+  /* PV of a growing annuity-immediate: Σ pmt·(1+g)^(y−1) / (1+r)^y for y = 1..n.
+     A ZERO return is perfectly valid — the payments simply are not discounted — so the
+     only guards are an empty term and a nonsensical rate. Bailing out at r <= 0 (as this
+     did) drove the required fund to zero whenever the returns slider was dragged to 0%,
+     which told the client no nest egg was needed at all. */
+  if(n<=0 || (1+r)<=0) return 0;
+  if(Math.abs(r-g)<1e-10) return pmt*n/(1+r);
   return pmt*(1-Math.pow((1+g)/(1+r),n))/(r-g);
 }
 
@@ -1652,8 +1676,18 @@ function computeNow(rateOverride){
      the investment return; whatever is left is assumed to stay in the deposit account and
      is carried forward at the deposit rate. A deficit year simply invests nothing — the
      shortfall is assumed to be covered from outside the plan. */
-  let nominalIncome=0, nominalExpense=0, nominalCommit=0, nominalNet=0;
-  let fvRegular=0, totalRegular=0, fvResidual=0, totalResidual=0;
+  let nominalIncome=0, nominalExpense=0, nominalCommit=0, nominalNet=0, nominalDeficit=0;
+  let fvRegular=0, totalRegular=0;
+  /* ── A RUNNING DEPOSIT BALANCE ──
+     A surplus year invests its chosen share and puts the rest in the deposit account.
+     A DEFICIT year spends that deposit balance before anything is assumed to come from
+     outside the plan — which is what actually happens: you dip into savings first. Only
+     what the balance cannot cover is treated as outside money. The balance still earns
+     the deposit rate each year, so at the end of the loop it already sits at the
+     retirement age and needs no further compounding.
+     Existing deposits (the amount typed into the deposit field) are kept separate and
+     are not drawn down, so that line stays exactly what was entered. */
+  let pot=0, paidIntoPot=0, drawnFromPot=0, coveredOutside=0;
   const rows=[];
   for(let t=1;t<=Math.min(x,70);t++){
     const incT = salary*12*Math.pow(1+gS,t-1) + othInc*12*Math.pow(1+gO,t-1);
@@ -1661,21 +1695,36 @@ function computeNow(rateOverride){
     const cmtT = cmtTotalAt(commitments,t,'pre');
     const netT = incT-expT-cmtT;
 
-    const investMoT = wantsInvest ? Math.max(0, netT/12)*regPct : 0;
-    const redT      = investMoT*12;
-    const residT    = netT-redT;              // may be negative in a deficit year
+    pot *= (1+depR);                          // a year of interest on last year's balance
+    let redT=0, toPot=0, fromPot=0, outsideT=0;
+    if(netT>0){
+      const investMoT = wantsInvest ? (netT/12)*regPct : 0;
+      redT  = investMoT*12;
+      toPot = netT-redT;
+      pot  += toPot;
+      paidIntoPot += toPot;
+      fvRegular += fvOrdinaryAnnuity(investMoT, regR/12, 12)*Math.pow(1+regR, x-t);
+      totalRegular += redT;
+    } else if(netT<0){
+      const need = -netT;
+      fromPot  = Math.min(pot, need);
+      pot     -= fromPot;
+      outsideT = need-fromPot;
+      drawnFromPot   += fromPot;
+      coveredOutside += outsideT;
+    }
 
     nominalIncome  += incT;
     nominalExpense += expT;
     nominalCommit  += cmtT;
     nominalNet     += netT;
-    totalRegular   += redT;
-    totalResidual  += residT;
-    fvRegular  += fvOrdinaryAnnuity(investMoT, regR/12, 12)*Math.pow(1+regR, x-t);
-    fvResidual += residT*Math.pow(1+carryR, x-t);
-    rows.push({y:t, age:H.ageNow+t, inc:incT, exp:expT, cmt:cmtT, red:redT, net:netT, resid:residT});
+    nominalDeficit += Math.min(0, netT);
+    rows.push({y:t, age:H.ageNow+t, inc:incT, exp:expT, cmt:cmtT, red:redT, net:netT,
+               resid:toPot, fromPot, outside:outsideT, pot});
   }
 
+  const fvResidual   = pot;                          // already at the retirement age
+  const totalResidual= paidIntoPot-drawnFromPot;     // net of what deficit years spent
   const regularGains = fvRegular-totalRegular;
   const capital      = fvAssets + fvRegular + fvResidual;
 
@@ -1686,8 +1735,9 @@ function computeNow(rateOverride){
     salary,gS,othInc,gO,living,
     monthlyIncomeNow,monthlyExpenseNow,netMonthly,
     wantsInvest,regAmt,regPct,regR,carryR,
-    nominalIncome,nominalExpense,nominalCommit,nominalNet,
+    nominalIncome,nominalExpense,nominalCommit,nominalNet,nominalDeficit,
     fvRegular,totalRegular,regularGains,fvResidual,totalResidual,
+    paidIntoPot,drawnFromPot,coveredOutside,
     commitments,hasCommitments:commitments.some(c=>c.annual>0),
     capital, rows,
     hasInputs: hasVal('nowDeposits')||hasVal('nowInvestments')||
@@ -1704,7 +1754,7 @@ function computeNow(rateOverride){
  *                       + retirement capital from Tab 1
  *                       − outstanding liabilities − planned big purchase
  *  totalFundRequired  = pvGA(gap, inf, r, n) × (1+r)            [annuity-due]
- *  sustainableExpense = netCash / pvGA(1, inf, r, n) + annualIncome
+ *  sustainableExpense = netCash / (pvGA(1, inf, r, n) × (1+r)) + annualIncome
  */
 function computeRetirement(rOverride){
   const H        = horizon();
@@ -1769,7 +1819,10 @@ function computeRetirement(rOverride){
 
   /* Option: sustainable expense — commitments are funded off the top of capital,
      and whatever remains supports the recurring monthly lifestyle. */
-  const pvFactor          = pvGA(1,inf,r,period);
+  /* ANNUITY-DUE, to match totalFundRequired: pvGA is annuity-immediate, so ×(1+r)
+     shifts each withdrawal to the START of its year. Using the immediate factor here
+     while the target used the due factor is what produced the phantom gap. */
+  const pvFactor          = pvGA(1,inf,r,period)*(1+r);
   const capitalForLiving  = netCash - pvRetCommit;
   const sustainableGap    = (pvFactor>0 && capitalForLiving>0) ? capitalForLiving/pvFactor : 0;
   const sustainableExpense= sustainableGap+estAnnualInflow;
@@ -1784,12 +1837,12 @@ function computeRetirement(rOverride){
     let f=netCash;
     for(let y=1;y<=100;y++){
       const w=(annualGap>0?annualGap*Math.pow(1+inf,y-1):0)+cmtAt(y);
-      f=f*(1+r)-w;
+      f=(f-w)*(1+r);                       // withdraw at the start of the year, then grow
       if(f<=0){yearsFundLasts=y-1;break;}
       yearsFundLasts=y;
     }
   }
-  const insufficientCapital = needsFunding && (netCash<=0 || (netCash*(1+r) - firstYearGap) <= 0);
+  const insufficientCapital = needsFunding && (netCash<=0 || (netCash - firstYearGap) <= 0);
 
   const incSrcFlat = annualIncome;
   const expAt = y => annualExpense*Math.pow(1+inf,y-1) + cmtAt(y);
@@ -1799,9 +1852,11 @@ function computeRetirement(rOverride){
     for(let y=1;y<=period;y++){
       const cost=(annualGap>0?annualGap*Math.pow(1+inf,y-1):0)+cmtAt(y);
       const annExp=expAt(y);
-      let begFund,gains,principalUsed,endFund;
-      if(y===1){begFund=fl;gains=0;principalUsed=cost;endFund=fl-cost;}
-      else{begFund=fl*(1+r);gains=fl*r;endFund=begFund-cost;principalUsed=Math.max(0,cost-gains);}
+      // Start-of-year withdrawal: take the cost out first, then grow what remains.
+      const begFund=fl, afterW=fl-cost;
+      const gains=afterW>0?afterW*r:0;
+      const endFund=afterW+gains;
+      const principalUsed=cost;
       rows.push({y,cost,annExp,cmt:cmtAt(y),incomeSrc:incSrcFlat,cap:begFund,begFund,gains,principalUsed,endFund});fl=endFund;
       tc+=cost;tg+=gains;tp+=principalUsed;
     }
@@ -1814,7 +1869,7 @@ function computeRetirement(rOverride){
     for(let y=1;y<=period;y++){
       const w=chosenGap*Math.pow(1+inf,y-1)+cmtAt(y);
       const annExp=expAt(y);
-      const beg=f,gains=beg*r,end=beg+gains-w,pu=Math.max(0,w-gains);
+      const beg=f,afterW=beg-w,gains=afterW>0?afterW*r:0,end=afterW+gains,pu=Math.max(0,w);
       rows.push({y,cost:annExp,annExp,cmt:cmtAt(y),incomeSrc:incSrcFlat,cap:beg,begFund:beg,gains,principalUsed:pu,endFund:Math.max(0,end)});
       f=Math.max(0,end);tc+=w;tg+=gains;tp+=pu;
     }
@@ -1824,8 +1879,8 @@ function computeRetirement(rOverride){
     let f=netCash;
     for(let y=1;y<=yTarget;y++){
       const w=(annualGap>0?annualGap*Math.pow(1+inf,y-1):0)+cmtAt(y);
-      const beg=f, gains=beg>0?beg*r:0;
-      f=beg+gains-w;
+      const afterW=f-w;
+      f=afterW+(afterW>0?afterW*r:0);
       if(f<=0) return 0;
     }
     return f;
@@ -1836,7 +1891,7 @@ function computeRetirement(rOverride){
     for(let y=1;y<=maxY;y++){
       const w=(annualGap>0?annualGap*Math.pow(1+inf,y-1):0)+cmtAt(y);
       const annExp=expAt(y);
-      const beg=f,gains=beg>0?beg*r:0,end=beg+gains-w,pu=Math.max(0,w-gains);
+      const beg=f,afterW=beg-w,gains=afterW>0?afterW*r:0,end=afterW+gains,pu=Math.max(0,w);
       rows.push({y,cost:annExp,annExp,cmt:cmtAt(y),incomeSrc:incSrcFlat,cap:beg,begFund:beg,gains,principalUsed:pu,endFund:end,depleted:end<=0});
       f=end;tc+=w;tg+=gains;tp+=pu;
     }
@@ -2329,8 +2384,17 @@ function renderNow(p,c){
       ? line('Of which, invested regularly',fP(p.totalRegular),{indent:true,spaced:true,
           sub:`${fmt(p.regPct*100,0)}% of each year's surplus, at ${pct(p.regR)}% p.a.`})
       : '')+
-    line('Of which, left in deposits',neg(p.totalResidual),{indent:true,
-      sub:`stays in your deposit account, earning ${pct(p.depR)}% p.a.`});
+    line('Of which, left in deposits',fP(p.totalResidual),{indent:true,
+      sub: p.drawnFromPot>0
+        ? `${fP(p.paidIntoPot)} put aside, less ${fP(p.drawnFromPot)} spent in deficit years — earning ${pct(p.depR)}% p.a.`
+        : `stays in your deposit account, earning ${pct(p.depR)}% p.a.`})+
+    (p.nominalDeficit<0
+      ? line('Of which, deficit years',`(${fP(Math.abs(p.nominalDeficit))})`,{indent:true,
+          sub: p.coveredOutside>0
+            ? `${fP(p.drawnFromPot)} covered by drawing down your deposits, ${fP(p.coveredOutside)} from outside this plan`
+            : `covered in full by drawing down the deposits you had built up`,
+          color:'var(--ruby)'})
+      : '');
 
   const cfSub=document.getElementById('cashFlowSub');
   if(cfSub)cfSub.textContent = p.valid
@@ -2341,18 +2405,20 @@ function renderNow(p,c){
     (p.wantsInvest
       ? `Each year you invest ${fmt(p.regPct*100,0)}% of that year's surplus; whatever is left over is assumed to stay in your deposit account. `
       : `You are not investing regularly, so the whole surplus is assumed to stay in your deposit account. `)+
-    `A year where expenses exceed income invests nothing — the shortfall is assumed to be covered from outside this plan.`;
+    `A year where expenses exceed income spends the deposits you had built up before anything is assumed to come from outside this plan — you dip into savings first. Nothing is invested in such a year, and your regular investments are left untouched.`;
 
   /* ── Card 2: retirement capital ── */
   document.getElementById('capBuildBox').innerHTML=
-    line('Future value of deposits',neg(p.fvDep+p.fvResidual),{
-      sub:`${fP(p.dep)} you hold today plus ${fP(p.totalResidual)} of cash flow left unspent, all at ${pct(p.depR)}% p.a.${over}`,
-      color:(p.fvDep+p.fvResidual)<0?'var(--ruby)':''})+
+    line('Future value of deposits',fP(p.fvDep),{sub:`${fP(p.dep)} you hold today at ${pct(p.depR)}% p.a.${over}`})+
     line('Future value of current investments',fP(p.fvInv),{sub:`${fP(p.inv)} at ${pct(p.invR)}% p.a.${over}`})+
     (p.wantsInvest
       ? line('Future value of regular investments',fP(p.fvRegular),{
           sub:`${fP(p.totalRegular)} invested over ${yrsTxt} at ${pct(p.regR)}% p.a. — ${fP(p.regularGains)} growth`})
       : '')+
+    line('Future value of cash left in deposits',fP(p.fvResidual),{
+      sub: p.drawnFromPot>0
+        ? `${fP(p.paidIntoPot)} put aside less ${fP(p.drawnFromPot)} spent in deficit years, with interest at ${pct(p.depR)}% p.a.`
+        : `${fP(p.totalResidual)} of cash flow you did not invest, carried at ${pct(p.depR)}% p.a.`})+
     line('Retirement Capital from Your Life Now',neg(p.capital),{tot:true,ruleNum:true,
       color:p.capital<0?'var(--ruby)':'var(--green)'});
 
@@ -2610,8 +2676,8 @@ function updateGapFunding(){
 
   document.getElementById('scMaintainStats').innerHTML=`
     <div><div class="sc-stat-label">Needed at Age ${c.startAge}</div><div class="sc-stat-val gold">${fP(shortfall)}</div></div>
-    <div><div class="sc-stat-label">Lump Sum Today</div><div class="sc-stat-val gold">${fP(lumpToday)}</div><div class="sc-stat-pv">at ${rTxt}% p.a. for ${n} years</div></div>
-    <div><div class="sc-stat-label">Or Invest Annually from Age ${c.now.ageNow}</div><div class="sc-stat-val gold">${fP(annual)}/yr</div><div class="sc-stat-pv">${fP(monthly)}/mo equivalent</div></div>`;
+    <div><div class="sc-stat-label">Lump Sum Today (New Money)</div><div class="sc-stat-val gold">${fP(lumpToday)}</div><div class="sc-stat-pv">at ${rTxt}% p.a. for ${n} years</div></div>
+    <div><div class="sc-stat-label">Or Invest Annually from Age ${c.now.ageNow} (New Money)</div><div class="sc-stat-val gold">${fP(annual)}/yr</div><div class="sc-stat-pv">${fP(monthly)}/mo equivalent</div></div>`;
 }
 
 function renderTable(tbId,tfId,rows,totals,isDepleted){
@@ -2790,7 +2856,7 @@ function drawBalanceChart(c){
     for(let y=1;y<=c.period;y++){
       const gap=Math.max(0,annualSpend-c.incomeSources);
       const w=gap*Math.pow(1+c.inf,y-1)+c.cmtAt(y);
-      f=f*(1+c.r)-w;
+      f=(f-w)*(1+c.r);                     // start-of-year withdrawal, then growth
       if(f<=0){out.push(0);break;}
       out.push(f);
     }
@@ -2946,7 +3012,7 @@ function updateSlider(c){
   document.getElementById('sliderVal').textContent=fP(monthly)+'/mo';
   const gap=Math.max(0,annual-c.estAnnualInflow);
   let yrs=0;
-  if(gap<=0&&!c.hasRetCommit){yrs=c.period;}else if(c.netCash>0){let f=c.netCash;for(let y=1;y<=100;y++){const w=gap*Math.pow(1+c.inf,y-1)+c.cmtAt(y);f=f*(1+c.r)-w;if(f<=0){yrs=y-1;break;}yrs=y;}}
+  if(gap<=0&&!c.hasRetCommit){yrs=c.period;}else if(c.netCash>0){let f=c.netCash;for(let y=1;y<=100;y++){const w=gap*Math.pow(1+c.inf,y-1)+c.cmtAt(y);f=(f-w)*(1+c.r);if(f<=0){yrs=y-1;break;}yrs=y;}}
   const isSafe=yrs>=c.period;
   // The slider moves in retirement-age pesos; show what that buys in today's money.
   const pvEl=document.getElementById('sliderValPv');
@@ -2961,6 +3027,9 @@ function updateSlider(c){
 function switchRTab(idx,btn){
   document.querySelectorAll('.rtab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
   document.querySelectorAll('.rtab-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  // Reached from the "Proceed" button at the foot of a tab, the reader is at the bottom
+  // of the page — bring them back to the top of the tab they just opened.
+  if(!btn){const t=document.querySelector('.result-tabs');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}
   // Canvases measure 0 wide while their tab is hidden, so a chart drawn then comes out
   // at the fallback width. Redraw once the panel is actually on screen.
   if(lastR&&lastE) requestAnimationFrame(()=>renderCharts(lastR,lastE));
@@ -3023,20 +3092,36 @@ function resetForm(){
 /* ── PDF ── */
 function downloadPDF(){
   if(!lastR||!lastE){alert('Please fill in your details first.');return;}
-  const c=lastR,e=lastE;
+  const c=lastR,e=lastE,n=c.now;
   const now=new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'});
-  const pct=n=>e.netAfterTax>0?fPct(n/e.netAfterTax):'—';
+  const pctOf=v=>e.netAfterTax>0?fPct(v/e.netAfterTax):'—';
+  const rt=r0=>fmt(r0*100,2).replace(/\.?0+$/,'')+'%';
+  const row=(l,v)=>`<div class="pdf-row"><span class="pdf-row-lbl">${l}</span><span class="pdf-row-val">${v}</span></div>`;
+  const neg=v=>v<0?'('+fP(Math.abs(v))+')':fP(v);
+  const stat=(l,v,cls,sub)=>`<div class="pdf-stat"><div class="pdf-stat-label">${l}</div><div class="pdf-stat-val ${cls||''}">${v}</div>${sub?`<div style="font-size:7pt;color:#777">${sub}</div>`:''}</div>`;
+  const over = n.valid?` over ${n.x} yrs`:'';
 
-  let verdictTitle,verdictClass;
-  if(c.annualGap<=0){verdictTitle='✓ Retirement is Fully Funded';verdictClass='ok';}
-  else if(c.cashShortfall>0){verdictTitle='⚠ Retirement Gap Detected';verdictClass='';}
-  else{verdictTitle='✓ You Are On Track';verdictClass='ok';}
-
+  /* ── Option 2 gap funding, at whatever return the slider is showing ── */
+  const gapSlider=document.getElementById('fundReturnSlider');
+  const gi=(gapSlider?(parseFloat(gapSlider.value)||0):n.invR*100)/100;
+  const gn=c.yearsToRet, gsf=c.cashShortfall;
+  const gLump = (gsf>0&&gn>0)? gsf/Math.pow(1+gi,gn) : 0;
+  const gAnnual=(gsf>0&&gn>0)? (Math.abs(gi)<1e-12?gsf/gn:gsf*gi/(Math.pow(1+gi,gn)-1)) : 0;
+  const gMonthly=(gsf>0&&gn>0)? (Math.abs(gi/12)<1e-12?gsf/(gn*12):gsf*(gi/12)/(Math.pow(1+gi/12,gn*12)-1)) : 0;
   const heirsRows=[];
   if(e.legitChildrenN>0)heirsRows.push({heir:'Legitimate Children',count:e.legitChildrenN,total:e.legitChildTotal,per:e.perLegitChild});
   if(e.survivingSpouse==='Yes')heirsRows.push({heir:'Surviving Spouse',count:1,total:e.spouseShare,per:e.spouseShare});
   if(e.illegitChildrenN>0)heirsRows.push({heir:'Illegitimate Children',count:e.illegitChildrenN,total:e.illegitChildTotal,per:e.perIllegitChild});
   if(e.legitParents==='Yes'&&e.legitChildrenN===0)heirsRows.push({heir:'Legitimate Parents',count:1,total:e.legitParentShare,per:e.legitParentShare});
+  if(e.illegitParents==='Yes'&&e.legitChildrenN===0&&e.illegitChildrenN===0)heirsRows.push({heir:'Illegitimate Parents',count:1,total:e.illegitParentShare,per:e.illegitParentShare});
+
+  const liveCmt=n.commitments.filter(cm=>cm.annual>0);
+
+  let verdictTitle,verdictClass;
+  if(c.insufficientCapital){verdictTitle='⚠ Initial Capital Is Not Enough';verdictClass='';}
+  else if(!c.needsFunding){verdictTitle='✓ Retirement Is Fully Funded';verdictClass='ok';}
+  else if(c.cashShortfall>0){verdictTitle='⚠ Retirement Gap Detected';verdictClass='';}
+  else{verdictTitle='✓ You Are On Track';verdictClass='ok';}
 
   document.getElementById('pdfReport').innerHTML=`
     <div class="pdf-cover">
@@ -3045,116 +3130,191 @@ function downloadPDF(){
       <div class="sub">Prepared on ${now} &nbsp;·&nbsp; For illustration purposes only</div>
     </div>
 
+    <!-- ═══ PART 1 — YOUR ANSWERS ═══ -->
     <div class="pdf-sec">
-      <div class="pdf-sec-title">Client Inputs</div>
+      <div class="pdf-sec-title">Part 1 · Your Answers</div>
       <div class="pdf-2col">
         <div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Age Now</span><span class="pdf-row-val">${c.now.valid?c.now.ageNow:'—'}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Desired Retirement Age</span><span class="pdf-row-val">${c.startAge}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Deposits</span><span class="pdf-row-val">${fP(c.now.dep)} @ ${(c.now.depR*100).toFixed(2)}%</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Investments</span><span class="pdf-row-val">${fP(c.now.inv)} @ ${(c.now.invR*100).toFixed(2)}%</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Monthly Salary</span><span class="pdf-row-val">${fP(c.now.salary)} (+${(c.now.gS*100).toFixed(2)}% p.a.)</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Monthly Other Income</span><span class="pdf-row-val">${fP(c.now.othInc)} (+${(c.now.gO*100).toFixed(2)}% p.a.)</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Monthly Living Expense</span><span class="pdf-row-val">${fP(c.now.living)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Net Monthly Cash Flow</span><span class="pdf-row-val">${c.now.netMonthly<0?'('+fP(Math.abs(c.now.netMonthly))+')':fP(c.now.netMonthly)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Regular Investment</span><span class="pdf-row-val">${c.now.wantsInvest?(c.now.regPct*100).toFixed(0)+'% of cash flow @ '+(c.now.regR*100).toFixed(2)+'%':'None'}</span></div>
-          ${c.now.commitments.filter(cm=>cm.annual>0).map(cm=>`<div class="pdf-row"><span class="pdf-row-lbl">${cm.label}</span><span class="pdf-row-val">${fP(cm.annual)}/yr · ${cm.start<=0?'now':'in '+cm.start+' yrs'} · ${cm.oneTime?'one-time':(cm.ongoing?'ongoing':cm.years+' yrs')} · ${(cm.rate*100).toFixed(2)}% · ${cm.cont?'continues':'stops at retirement'}</span></div>`).join('')}
+          <div class="pdf-stat-label" style="margin-bottom:3pt">Personal Details</div>
+          ${row('Current age', n.valid?n.ageNow:'—')}
+          ${row('Desired retirement age', c.startAge)}
+          ${row('Years until retirement', n.valid?n.x+' yrs':'—')}
+          ${row('Legally married', e.legallyMarried||'—')}
+
+          <div class="pdf-stat-label" style="margin:7pt 0 3pt">What You Have Now</div>
+          ${row('Deposits', fP(n.dep)+' @ '+rt(n.depR))}
+          ${row('Current investments', fP(n.inv)+' @ '+rt(n.invR))}
+          ${row('Family home (value today)', fP(e.familyHomeToday))}
+          ${row('Other names on title', n.famOther)}
+          ${row('Other real estate (value today)', fP(e.otherRealEstateToday))}
+
+          <div class="pdf-stat-label" style="margin:7pt 0 3pt">Monthly Income</div>
+          ${row('Salary', fP(n.salary)+' (+'+rt(n.gS)+' p.a.)')}
+          ${row('Other income', fP(n.othInc)+' (+'+rt(n.gO)+' p.a.)')}
+
+          <div class="pdf-stat-label" style="margin:7pt 0 3pt">Monthly Expense</div>
+          ${row('Day-to-day living', fP(n.living))}
+          ${row('Net monthly cash flow', neg(n.netMonthly))}
+
+          <div class="pdf-stat-label" style="margin:7pt 0 3pt">Regular Investing</div>
+          ${row('Investing cash flow regularly', n.wantsInvest?'Yes':'No')}
+          ${n.wantsInvest?row('Share of cash flow invested', fmt(n.regPct*100,0)+'%')+row('Assumed return', rt(n.regR)):''}
         </div>
         <div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Retirement Capital from Your Life Now</span><span class="pdf-row-val">${fP(c.capitalFromNow)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Expected Retirement Pay</span><span class="pdf-row-val">${fP(c.cashAvail)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Monthly Expense at Retirement</span><span class="pdf-row-val">${fP(c.monthlyExpense)}${c.usedOwnExpense?' (entered)':' (computed)'}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Other Sources of Income During Retirement</span><span class="pdf-row-val">${fP(c.monthlyIncome)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Retirement Period</span><span class="pdf-row-val">${c.period} years</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Net Return p.a.</span><span class="pdf-row-val">${(c.r*100).toFixed(2)}%</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Annual Inflation</span><span class="pdf-row-val">${(c.inf*100).toFixed(2)}%</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Family Home (Value Today)</span><span class="pdf-row-val">${fP(e.familyHomeToday)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Other Real Estate (Value Today)</span><span class="pdf-row-val">${fP(e.otherRealEstateToday)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Property Appreciation p.a.</span><span class="pdf-row-val">${(e.propG*100).toFixed(2)}%</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Legally Married</span><span class="pdf-row-val">${e.legallyMarried||'—'}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Outstanding Liabilities</span><span class="pdf-row-val">${fP(c.liabilities)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Planned Big Purchase / One-time Gift</span><span class="pdf-row-val">${fP(c.specialAllot)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Legitimate Children</span><span class="pdf-row-val">${e.legitChildrenN}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Surviving Spouse</span><span class="pdf-row-val">${e.survivingSpouse}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Illegitimate Children</span><span class="pdf-row-val">${e.illegitChildrenN}</span></div>
+          <div class="pdf-stat-label" style="margin-bottom:3pt">Other Expenses</div>
+          ${liveCmt.length
+            ? liveCmt.map(cm=>row(cm.label, `${fP(cm.annual)}/yr · ${cm.start<=0?'from now':'in '+cm.start+' yrs'} · ${cm.oneTime?'one-time':(cm.ongoing?'ongoing':cm.years+' yrs')} · ${rt(cm.rate)}`)).join('')
+            : row('None recorded','—')}
+
+          <div class="pdf-stat-label" style="margin:7pt 0 3pt">Retirement Planning</div>
+          ${row('Monthly expense at age '+c.startAge, fP(c.monthlyExpense)+(c.usedOwnExpense?' (entered)':' (computed)'))}
+          ${row('Other income during retirement', fP(c.monthlyIncome)+'/mo')}
+          ${row('Expected retirement pay', fP(c.cashAvail))}
+          ${row('Outstanding liabilities', fP(c.liabilities))}
+          ${row('Planned big purchase', fP(c.specialAllot))}
+
+          <div class="pdf-stat-label" style="margin:7pt 0 3pt">Assumptions</div>
+          ${row('Expected years in retirement', c.period+' yrs')}
+          ${row('Net return p.a. of retirement fund', rt(c.r))}
+          ${row('Annual inflation', rt(c.inf))}
+          ${row('Property appreciation p.a.', rt(e.propG))}
+
+          <div class="pdf-stat-label" style="margin:7pt 0 3pt">Surviving Heirs</div>
+          ${row('Legitimate children', e.legitChildrenN)}
+          ${row('Surviving spouse', e.survivingSpouse)}
+          ${row('Illegitimate children', e.illegitChildrenN)}
+          ${row('Legitimate parents surviving', e.legitParents)}
+          ${row('Illegitimate parents surviving', e.illegitParents)}
         </div>
       </div>
     </div>
 
-    <div class="pdf-sec">
-      <div class="pdf-sec-title">Retirement Planning Findings</div>
-      <div class="pdf-verdict ${verdictClass}"><h3>${verdictTitle}</h3><p>${document.getElementById('verdictSub').textContent}</p></div>
-      <div class="pdf-2col">
+    <!-- ═══ PART 2 — RETIREMENT CAPITAL FROM YOUR LIFE NOW ═══ -->
+    <div class="pdf-sec newpage">
+      <div class="pdf-sec-title">Part 2 · Retirement Capital from Your Life Now</div>
+
+      <div class="pdf-stat-label" style="margin-bottom:4pt">Cash Flow Before Retirement${over}</div>
+      ${row('Total income', fP(n.nominalIncome))}
+      ${row('Less: Total living expenses', '('+fP(n.nominalExpense)+')')}
+      ${liveCmt.length?row('Less: Total other expenses', '('+fP(n.nominalCommit)+')'):''}
+      ${row('<b>Net cash flow before retirement</b>', '<b>'+neg(n.nominalNet)+'</b>')}
+      ${n.wantsInvest?row('&nbsp;&nbsp;Of which, invested regularly', fP(n.totalRegular)):''}
+      ${row('&nbsp;&nbsp;Of which, left in deposits', fP(n.totalResidual))}
+      ${n.nominalDeficit<0?row('&nbsp;&nbsp;Of which, deficit years', '('+fP(Math.abs(n.nominalDeficit))+')'):''}
+      ${n.drawnFromPot>0?row('&nbsp;&nbsp;&nbsp;&nbsp;covered by drawing down deposits', fP(n.drawnFromPot)):''}
+      ${n.coveredOutside>0?row('&nbsp;&nbsp;&nbsp;&nbsp;covered from outside this plan', fP(n.coveredOutside)):''}
+
+      <div class="pdf-stat-label" style="margin:8pt 0 4pt">Retirement Capital at Age ${c.startAge}</div>
+      ${row('Future value of deposits', fP(n.fvDep))}
+      ${row('Future value of current investments', fP(n.fvInv))}
+      ${n.wantsInvest?row('Future value of regular investments', fP(n.fvRegular)):''}
+      ${row('Future value of cash left in deposits', fP(n.fvResidual))}
+      ${row('<b>Retirement Capital from Your Life Now</b>', '<b>'+neg(n.capital)+'</b>')}
+
+      <div class="pdf-2col" style="margin-top:8pt">
         <div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Total Retirement Fund Needed</div><div class="pdf-stat-val ruby">${c.totalFundRequired>0?fP(c.totalFundRequired):'Fully funded'}</div></div>
-          <div class="pdf-stat"><div class="pdf-stat-label">How Much You Have</div><div class="pdf-stat-val">${fP(c.netCash)}</div></div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Total Pre-Retirement Investment</div><div class="pdf-stat-val">${fP(c.preRetirementTotal)}</div></div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Additional Fund Needed</div><div class="pdf-stat-val ruby">${c.totalFundRequired>0?fP(c.totalFundRequired):'None'}</div></div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Annual Retirement Gap</div><div class="pdf-stat-val ${c.annualGap>0?'ruby':'green'}">${c.annualGap>0?fP(c.annualGap)+'/yr':'No gap'}</div></div>
+          ${stat('Retirement Capital Formed', neg(n.capital), n.capital<0?'ruby':'green')}
+          ${stat('Total Financial Assets Today', fP(n.assetsNow))}
         </div>
         <div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Fund Duration (desired spending)</div><div class="pdf-stat-val ${c.yearsFundLasts>=c.period?'green':'ruby'}">${c.yearsFundLasts>=c.period?c.period+'+':c.yearsFundLasts} years</div></div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Suggested Monthly Spending</div><div class="pdf-stat-val gold">${fP(c.sustainableExpense/12)}/month</div></div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Shortfall vs. Net Cash</div><div class="pdf-stat-val ${c.cashShortfall>0?'ruby':'green'}">${c.cashShortfall>0?fP(c.cashShortfall):'None'}</div></div>
+          ${stat('Total Non-Financial Assets Today', fP(n.realEstate), '', 'family home share '+fP(n.familyHomeShare)+' + other real estate '+fP(n.otherRealEstate))}
+          ${stat('Net Monthly Cash Flow', neg(n.netMonthly), n.netMonthly<0?'ruby':'')}
         </div>
       </div>
+      <p style="font-size:7.5pt;color:#666;margin-top:5pt">Real estate is excluded from retirement capital and carried to the Estate Planning section instead. A year where expenses exceed income spends the deposits built up before anything is assumed to come from outside this plan; nothing is invested in such a year and the regular investments are left untouched.</p>
+    </div>
+
+    <!-- ═══ PART 3 — RETIREMENT PLANNING ═══ -->
+    <div class="pdf-sec newpage">
+      <div class="pdf-sec-title">Part 3 · Retirement Planning</div>
+      <div class="pdf-verdict ${verdictClass}"><h3>${verdictTitle}</h3><p>${(document.getElementById('verdictSub')||{}).textContent||''}</p></div>
+
+      <div class="pdf-stat-label" style="margin-bottom:4pt">Your Retirement Nest Egg</div>
+      ${row('Retirement Capital from Your Life Now', fP(c.capitalFromNow))}
+      ${row('Add: Expected retirement pay', fP(c.cashAvail))}
+      ${row('Less: Outstanding liabilities', '('+fP(c.liabilities)+')')}
+      ${row('Less: Planned big purchase', '('+fP(c.specialAllot)+')')}
+      ${row('<b>Net Retirement Capital</b>', '<b>'+neg(c.retirementCapital)+'</b>')}
+
+      <div class="pdf-stat-label" style="margin:8pt 0 4pt">Income and Expense Analysis</div>
+      ${row('Estimated annual expense', '('+fP(c.targetAnnualExpense)+')')}
+      ${row('Add: Income sources during retirement', fP(c.incomeSources))}
+      ${row('<b>Net expense each year of retirement</b>', '<b>'+neg(c.incomeSources-c.targetAnnualExpense)+'</b>')}
+
+      <div class="pdf-2col" style="margin-top:8pt">
+        <div>
+          ${stat('Target Nest Egg at Age '+c.startAge, c.totalFundRequired>0?fP(c.totalFundRequired):'None needed','ruby')}
+          ${stat('Net Retirement Capital', neg(c.retirementCapital))}
+          ${stat('Monthly Expense at Age '+c.startAge, fP(c.monthlyExpense),'', c.yearsToRet>0?fP(c.monthlyExpense/Math.pow(1+c.inf,c.yearsToRet))+' in today\'s prices':'')}
+        </div>
+        <div>
+          ${stat('Fund Duration at Desired Spending', (c.yearsFundLasts>=c.period?c.period+'+':c.yearsFundLasts)+' years', c.yearsFundLasts>=c.period?'green':'ruby')}
+          ${stat('Sustainable Monthly Expense', fP(c.sustainableExpense/12),'gold', c.yearsToRet>0?fP((c.sustainableExpense/12)/Math.pow(1+c.inf,c.yearsToRet))+' in today\'s prices':'')}
+          ${stat('Shortfall vs Capital', c.cashShortfall>0?fP(c.cashShortfall):'None', c.cashShortfall>0?'ruby':'green')}
+        </div>
+      </div>
+
       <div class="pdf-sc-box" style="margin-top:8pt">
         <h3>Option 1 — Default (No additional investment)</h3>
-        <p style="font-size:8pt;color:#555;margin-bottom:6pt">${c.gapFundedByCapital<=0?`Your retirement income sources of ${fP(c.incomeSources)}/year cover your target spending of ${fP(c.monthlyExpense)}/month in full. Your nest egg sustains your desired spending for the full ${c.period}-year period with room to spare.`:c.yearsFundLasts>=c.period?`Given your estimated retirement nest egg, you will be able to maintain your desired spending of ${fP(c.monthlyExpense)}/month for the full ${c.period} years of your retirement period.`:`Given your estimated retirement nest egg, you will be able to maintain your desired spending of ${fP(c.monthlyExpense)}/month for only up to ${c.yearsFundLasts} years — short of your ${c.period}-year retirement period.`}</p>
+        <p style="font-size:8pt;color:#555;margin-bottom:6pt">${(document.getElementById('scDefaultDesc')||{}).textContent||''}</p>
         <div class="pdf-sc-stats">
-          <div><div class="pdf-stat-label">Years Nest Egg Lasts</div><div class="pdf-stat-val ${c.yearsFundLasts>=c.period?'green':'ruby'}">${c.yearsFundLasts>=c.period?c.period+'+':c.yearsFundLasts} years</div></div>
+          <div><div class="pdf-stat-label">Years Nest Egg Lasts</div><div class="pdf-stat-val ${c.yearsFundLasts>=c.period?'green':'ruby'}">${c.insufficientCapital?'0 yrs':(c.yearsFundLasts>=c.period?c.period+'+ yrs':c.yearsFundLasts+' yrs')}</div></div>
           <div><div class="pdf-stat-label">Desired Monthly Spending</div><div class="pdf-stat-val">${fP(c.monthlyExpense)}</div></div>
         </div>
       </div>
+
       <div class="pdf-sc-box">
         <h3>Option 2 — Desired Lifestyle (With Additional investment)</h3>
-        <p style="font-size:8pt;color:#555;margin-bottom:6pt">${c.gapFundedByCapital<=0||c.cashShortfall<=0?`Your retirement nest egg already fully funds your desired spending of ${fP(c.monthlyExpense)}/month for the full ${c.period}-year period. Surplus of ${fP(Math.abs(c.cashShortfall))} — no additional investment required.`:`If you want to maintain your monthly expense of ${fP(c.monthlyExpense)}/month, you should invest an additional amount of ${fP(c.cashShortfall)} on top of your existing retirement nest egg.`}</p>
+        <p style="font-size:8pt;color:#555;margin-bottom:6pt">${(document.getElementById('scMaintainDesc')||{}).textContent||''}</p>
         <div class="pdf-sc-stats">
-          <div><div class="pdf-stat-label">Additional Amount to Invest</div><div class="pdf-stat-val ${c.cashShortfall>0?'ruby':'green'}">${c.cashShortfall>0?fP(c.cashShortfall):'Fully funded'}</div></div>
-          <div><div class="pdf-stat-label">Total Fund Required</div><div class="pdf-stat-val">${fP(c.totalFundRequired)}</div></div>
-          <div><div class="pdf-stat-label">Retirement Period</div><div class="pdf-stat-val">${c.period} yrs</div></div>
+          <div><div class="pdf-stat-label">Needed at Age ${c.startAge}</div><div class="pdf-stat-val ${c.cashShortfall>0?'ruby':'green'}">${c.cashShortfall>0?fP(c.cashShortfall):'Fully funded'}</div></div>
+          ${gLump>0?`<div><div class="pdf-stat-label">Lump Sum Today (New Money) @ ${fmt(gi*100,2).replace(/\.?0+$/,'')}%</div><div class="pdf-stat-val gold">${fP(gLump)}</div></div>`:''}
+          ${gAnnual>0?`<div><div class="pdf-stat-label">Or Invest Annually (New Money)</div><div class="pdf-stat-val gold">${fP(gAnnual)}/yr</div><div style="font-size:7pt;color:#777">${fP(gMonthly)}/mo equivalent</div></div>`:''}
         </div>
       </div>
+
       <div class="pdf-sc-box">
         <h3>Option 3 — Adjust your Lifestyle</h3>
-        <p style="font-size:8pt;color:#555;margin-bottom:6pt">${c.gapFundedByCapital<=0||c.sustainableExpense/12>=c.monthlyExpense?`Your desired spending of ${fP(c.monthlyExpense)}/month is already within your sustainable level of ${fP(c.sustainableExpense/12)}/month for the full ${c.period}-year period — no reduction needed.`:`By decreasing your monthly expense to ${fP(c.sustainableExpense/12)}/month, you will be sustained by your retirement nest egg for ${c.period} years.`}</p>
+        <p style="font-size:8pt;color:#555;margin-bottom:6pt">${(document.getElementById('scAdjustDesc')||{}).textContent||''}</p>
         <div class="pdf-sc-stats">
-          <div><div class="pdf-stat-label">Sustainable Monthly Expense</div><div class="pdf-stat-val gold">${fP(c.sustainableExpense/12)}</div></div>
-          <div><div class="pdf-stat-label">Annual Expense (today's value)</div><div class="pdf-stat-val gold">${fP(c.sustainableExpense)}</div></div>
+          <div><div class="pdf-stat-label">Sustainable Monthly Expense</div><div class="pdf-stat-val gold">${fP(c.sustainableExpense/12)}</div>${c.yearsToRet>0?`<div style="font-size:7pt;color:#777">${fP((c.sustainableExpense/12)/Math.pow(1+c.inf,c.yearsToRet))} in today's prices</div>`:''}</div>
           <div><div class="pdf-stat-label">Retirement Period</div><div class="pdf-stat-val">${c.period} yrs</div></div>
         </div>
       </div>
     </div>
 
-    <div class="pdf-sec">
-      <div class="pdf-sec-title navy">Estate Planning Findings</div>
-      <p style="font-size:7.5pt;color:#666;margin:0 0 5pt">Financial assets are the Net Retirement Capital at age ${c.startAge}; real estate is appreciated from today's estimated value at ${(e.propG*100).toFixed(2)}% p.a.</p>
+    <!-- ═══ PART 4 — ESTATE PLANNING ═══ -->
+    <div class="pdf-sec newpage">
+      <div class="pdf-sec-title navy">Part 4 · Estate Planning</div>
+      <p style="font-size:7.5pt;color:#666;margin:0 0 5pt">Financial assets are the Net Retirement Capital at age ${c.startAge}; real estate is appreciated from today's estimated value at ${rt(e.propG)} p.a.</p>
       <div class="pdf-verdict estate" style="border-left-color:#1a2e4a;background:#f0f4f9">
         <h3>Estate Summary</h3>
-        <p>${document.getElementById('estateSub').textContent}</p>
+        <p>${(document.getElementById('estateSub')||{}).textContent||''}</p>
       </div>
       <div class="pdf-2col" style="margin-bottom:8pt">
         <div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Gross Estate</div><div class="pdf-stat-val navy">${fP(e.grossEstate)}</div></div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Total Deductions</div><div class="pdf-stat-val">(${fP(e.totalDeductions)})</div></div>
-          ${e.hasSpouse?`<div class="pdf-stat"><div class="pdf-stat-label">Less: Surviving Spouse Share (½)</div><div class="pdf-stat-val">(${fP(e.spouseConjugalShare)})</div></div>`:''}
-          <div class="pdf-stat"><div class="pdf-stat-label">Net Taxable Estate</div><div class="pdf-stat-val ruby">${fP(e.netTaxableEstate)}</div></div>
+          ${stat('Total Financial Assets', fP(e.totalFinancial),'navy')}
+          ${stat('Non-Financial Assets', fP(e.nonFinancial))}
+          ${stat('Gross Estate', fP(e.grossEstate),'navy')}
+          ${stat('Total Deductions', '('+fP(e.totalDeductions)+')')}
         </div>
         <div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Estate Tax (6%)</div><div class="pdf-stat-val ruby">${fP(e.estateTax)}</div></div>
-          <div class="pdf-stat"><div class="pdf-stat-label">Net Distributable Estate</div><div class="pdf-stat-val green">${fP(e.netAfterTax)}</div></div>
+          ${e.hasSpouse?stat('Less: Surviving Spouse Share (½)', '('+fP(e.spouseConjugalShare)+')'):''}
+          ${stat('Net Taxable Estate', fP(e.netTaxableEstate),'ruby')}
+          ${stat('Estate Tax (6%)', fP(e.estateTax),'ruby')}
+          ${stat('Net Distributable Estate', fP(e.netAfterTax),'green')}
         </div>
       </div>
       <div class="pdf-2col" style="margin-bottom:8pt">
-        <div><div class="pdf-stat"><div class="pdf-stat-label">Total Legitime</div><div class="pdf-stat-val gold">${fP(e.totalLegitme)}</div></div></div>
-        <div><div class="pdf-stat"><div class="pdf-stat-label">Free Portion</div><div class="pdf-stat-val gold">${fP(e.freePortion)}</div></div></div>
+        <div>${stat('Total Legitime', fP(e.totalLegitme),'gold')}</div>
+        <div>${stat('Free Portion', fP(e.freePortion),'gold')}</div>
       </div>
       <table class="pdf-ht">
         <thead><tr><th>Heir</th><th>Count</th><th>Legitime Amount</th><th>% of Net Estate</th><th>Per Heir</th></tr></thead>
         <tbody>
-          ${heirsRows.map(r=>`<tr><td>${r.heir}</td><td style="text-align:center">${r.count}</td><td style="text-align:right">${fP(r.total)}</td><td style="text-align:right">${pct(r.total)}</td><td style="text-align:right">${fP(r.per)}</td></tr>`).join('')}
-          <tr class="total-row"><td>Total Legitime</td><td></td><td style="text-align:right">${fP(e.totalLegitme)}</td><td style="text-align:right">${pct(e.totalLegitme)}</td><td>—</td></tr>
-          <tr class="free-row"><td>Free Portion</td><td></td><td style="text-align:right">${fP(e.freePortion)}</td><td style="text-align:right">${pct(e.freePortion)}</td><td>—</td></tr>
+          ${heirsRows.map(r=>`<tr><td>${r.heir}</td><td style="text-align:center">${r.count}</td><td style="text-align:right">${fP(r.total)}</td><td style="text-align:right">${pctOf(r.total)}</td><td style="text-align:right">${fP(r.per)}</td></tr>`).join('')}
+          <tr class="total-row"><td>Total Legitime</td><td></td><td style="text-align:right">${fP(e.totalLegitme)}</td><td style="text-align:right">${pctOf(e.totalLegitme)}</td><td>—</td></tr>
+          <tr class="free-row"><td>Free Portion</td><td></td><td style="text-align:right">${fP(e.freePortion)}</td><td style="text-align:right">${pctOf(e.freePortion)}</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -3172,7 +3332,7 @@ function downloadPDF(){
             <td style="text-align:right">${fP(r.tax)}</td></tr>`).join('')}
         </tbody>
       </table>
-      <p style="font-size:7.5pt;color:#666;margin-top:4pt">The estate is measured at the retirement age: financial assets are the Net Retirement Capital, which then draws down under the Default (no additional investment) scenario. Real estate keeps appreciating at ${(e.propG*100).toFixed(2)}% p.a. throughout. Same TRAIN Law deductions${e.hasSpouse?' and ½ conjugal share':''} applied at each point. For illustration only.</p>
+      <p style="font-size:7.5pt;color:#666;margin-top:4pt">The estate is measured at the retirement age: financial assets are the Net Retirement Capital, which then draws down under the Default (no additional investment) scenario. Real estate keeps appreciating at ${rt(e.propG)} p.a. throughout. Same TRAIN Law deductions${e.hasSpouse?' and ½ conjugal share':''} applied at each point. For illustration only.</p>
     </div>
 
     <div class="pdf-footer">
