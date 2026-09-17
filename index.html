@@ -468,7 +468,19 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
 .calcchip{margin-top:5px;border-radius:var(--r-sm);border:1px solid var(--gold-bdr);background:var(--gold-bg);padding:9px 12px;font-size:.74rem;color:var(--g800);line-height:1.45}
 .calcchip b{color:var(--gold-dk)}
 
-/* ── BIG & RECURRING COMMITMENTS ── */
+/* ── TOTAL ROWS WITHOUT A RULE ABOVE, AND SPACED ROWS ── */
+.nest-line.tot.no-rule{border-top:none;margin-top:0}
+.nest-line.spaced{margin-top:16px}
+.gap-row.tot.no-rule{border-top:none;margin-top:0}
+.gap-row.spaced{margin-top:16px}
+/* Accounting presentation: a short rule above the figure being totalled, not a
+   full-width divider across the label as well. */
+.nest-line.tot.rule-num{border-top:none;margin-top:2px;padding-top:4px}
+.nest-line.tot.rule-num .nl-val{border-top:1.5px solid var(--g400);padding-top:6px;display:inline-block;min-width:96px;text-align:right}
+.gap-row.tot.rule-num{border-top:none;margin-top:2px;padding-top:4px}
+.gap-row.tot.rule-num .gr-val{border-top:1.5px solid var(--g400);padding-top:6px;display:inline-block;min-width:110px;text-align:right}
+
+/* ── OTHER EXPENSES ── */
 .cmt-row{border:1px solid var(--g200);border-radius:var(--r-sm);background:var(--offwhite);padding:12px 13px;margin-bottom:10px;position:relative}
 .cmt-row-hd{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .cmt-row-num{width:21px;height:21px;border-radius:50%;background:var(--ruby);color:#fff;font-size:.66rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -632,28 +644,16 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
       <div class="card-bd">
 
         <div class="field">
-          <div class="q-sub">Cash</div>
+          <div class="q-sub">Deposits</div>
           <div class="field-row-ar">
-            <div><label class="q-lbl">How much cash do you hold?</label>
-              <div class="fi"><span class="pre">₱</span><input type="text" id="nowCash" class="pl num-input" placeholder="0" inputmode="numeric"></div>
-            </div>
-            <div><label class="q-lbl">Rate p.a.</label>
-              <div class="fi"><input type="number" id="nowCashRate" class="pr" value="0.05" min="0" max="30" step="0.01"><span class="suf">%</span></div>
-            </div>
-          </div>
-          <div class="hint">Savings and payroll accounts. Defaulted to 0.05% p.a. — editable if your account earns more.</div>
-        </div>
-
-        <div class="field">
-          <div class="q-sub">Deposits / Time Deposits</div>
-          <div class="field-row-ar">
-            <div><label class="q-lbl">How much is placed in deposits or time deposits?</label>
+            <div><label class="q-lbl">How much is placed in deposits?</label>
               <div class="fi"><span class="pre">₱</span><input type="text" id="nowDeposits" class="pl num-input" placeholder="0" inputmode="numeric"></div>
             </div>
             <div><label class="q-lbl">Rate p.a.</label>
-              <div class="fi"><input type="number" id="nowDepositsRate" class="pr" placeholder="0" min="0" max="30" step="0.01"><span class="suf">%</span></div>
+              <div class="fi"><input type="number" id="nowDepositsRate" class="pr" value="0.05" min="0" max="30" step="0.01"><span class="suf">%</span></div>
             </div>
           </div>
+          <div class="hint">Savings, payroll and time deposit accounts. Defaulted to 0.05% p.a. — editable if your account earns more.</div>
         </div>
 
         <div class="field">
@@ -676,7 +676,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
           <div class="hint">Estimated current market value of the family home</div>
         </div>
         <div class="field">
-          <label class="q-lbl">Family Home — Other Names on Title (apart from spouse)</label>
+          <label class="q-lbl">Family Home — Indicate number of other Names on Title (apart from spouse)</label>
           <div class="fi"><input type="number" id="familyHomeOtherOwners" class="pr" placeholder="0" min="0" max="20" step="1"><span class="suf" style="font-size:.62rem">owners</span></div>
           <div class="hint">Number of additional co-owners named on the title, excluding you and your spouse (if married)</div>
         </div>
@@ -699,7 +699,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
               <div class="fi"><span class="pre">₱</span><input type="text" id="salaryMonthly" class="pl num-input" placeholder="0" inputmode="numeric"></div>
             </div>
             <div><label class="q-lbl">Increase p.a.</label>
-              <div class="fi"><input type="number" id="salaryGrowth" class="pr" value="5" min="0" max="30" step="0.1"><span class="suf">%</span></div>
+              <div class="fi"><input type="number" id="salaryGrowth" class="pr" value="3.5" min="0" max="30" step="0.1"><span class="suf">%</span></div>
             </div>
           </div>
           <div class="hint">Take-home pay. The expected increase is applied every year until you retire.</div>
@@ -722,23 +722,11 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
     <div class="card">
       <div class="card-hd"><div class="card-hd-icon">💸</div><h3>How much are you spending every month? (Expense)</h3></div>
       <div class="card-bd">
-        <div class="field">
+        <div class="field" style="margin-bottom:0">
           <div class="q-sub">Living Expense</div>
           <label class="q-lbl">How much do you spend on day-to-day living every month?</label>
           <div class="fi"><span class="pre">₱</span><input type="text" id="livingExpense" class="pl num-input" placeholder="0" inputmode="numeric"></div>
           <div class="hint">Food, utilities, transport, household, rent, schooling — your everyday cost of living. This is the figure carried into your retirement budget.</div>
-        </div>
-        <div class="field">
-          <div class="q-sub">Interest Expense from Liabilities</div>
-          <label class="q-lbl">How much do you pay in interest on loans every month?</label>
-          <div class="fi"><span class="pre">₱</span><input type="text" id="interestExpense" class="pl num-input" placeholder="0" inputmode="numeric"></div>
-          <div class="hint">e.g. housing loan, auto loan, credit card interest</div>
-        </div>
-        <div class="field" style="margin-bottom:0">
-          <div class="q-sub">Other Expenses</div>
-          <label class="q-lbl">Any other regular monthly expenses?</label>
-          <div class="fi"><span class="pre">₱</span><input type="text" id="otherExpenseNow" class="pl num-input" placeholder="0" inputmode="numeric"></div>
-          <div class="hint">e.g. insurance premiums, support to family, subscriptions</div>
         </div>
 
         <div class="ncf" id="ncfBox">
@@ -749,51 +737,52 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-hd"><div class="card-hd-icon">🎯</div><h3>Big &amp; Recurring Commitments</h3></div>
-      <div class="card-bd">
-        <div class="field" style="margin-bottom:12px">
-          <label class="q-lbl">Are there larger expenses that do not fall every month?</label>
-          <div class="hint" style="font-style:normal;color:var(--g600);font-size:.73rem;line-height:1.5">
-            Tuition for the next few years, a yearly trip, an annual insurance premium, a car you plan to replace.
-            Add one row for each. Leave <b>For how long</b> blank for something ongoing with no end date.
-          </div>
-        </div>
-        <div id="cmtList"></div>
-        <div class="cmt-empty" id="cmtEmpty">No commitments added yet.</div>
-        <button type="button" class="cmt-add" onclick="addCommitment()">＋ Add a commitment</button>
-        <div class="ncf" id="cmtTotalBox" style="display:none">
-          <div class="ncf-lbl">Total Commitments Before Retirement</div>
-          <div class="ncf-val" id="cmtTotalVal">₱0</div>
-          <div class="ncf-sub" id="cmtTotalSub"></div>
-        </div>
-      </div>
-    </div>
-
     <div class="card" id="investCard">
-      <div class="card-hd"><div class="card-hd-icon">🔁</div><h3>Would you like to invest this regularly?</h3></div>
+      <div class="card-hd"><div class="card-hd-icon">🔁</div><h3>Would you like to invest your net cash flow regularly?</h3></div>
       <div class="card-bd">
         <div class="field">
-          <label class="q-lbl">Do you want to regularly invest your monthly surplus?</label>
+          <label class="q-lbl">Do you want to regularly invest your net cash flow?</label>
           <div class="seg" id="investSeg">
-            <button type="button" id="investYesBtn" onclick="setInvestSurplus('Yes')">Yes</button>
-            <button type="button" id="investNoBtn" class="on" onclick="setInvestSurplus('No')">No</button>
+            <button type="button" id="investYesBtn" class="on" onclick="setInvestSurplus('Yes')">Yes</button>
+            <button type="button" id="investNoBtn" onclick="setInvestSurplus('No')">No</button>
           </div>
-          <input type="hidden" id="investSurplus" value="No">
-          <div class="hint" id="investHint">If yes, we will grow that regular investment at your assumed return until retirement.</div>
+          <input type="hidden" id="investSurplus" value="Yes">
+          <div class="hint" id="investHint"></div>
         </div>
-        <div id="investFields" style="display:none">
+        <div id="investFields">
           <div class="field-row-ar" style="margin-bottom:0">
             <div class="field" style="margin-bottom:0">
-              <label class="q-lbl">Amount to invest every month</label>
-              <div class="fi"><span class="pre">₱</span><input type="text" id="regularInvestAmt" class="pl num-input" placeholder="0" inputmode="numeric"></div>
+              <label class="q-lbl">How much of your cash flow would you like to invest?</label>
+              <div class="fi"><input type="number" id="regularInvestPct" class="pr" value="50" min="0" max="100" step="1"><span class="suf">%</span></div>
             </div>
             <div class="field" style="margin-bottom:0">
               <label class="q-lbl">Est. return p.a.</label>
               <div class="fi"><input type="number" id="regularInvestRate" class="pr" value="6" min="0" max="30" step="0.1"><span class="suf">%</span></div>
             </div>
           </div>
-          <div class="hint" style="margin-top:6px">This same return is used to carry your future income and expenses forward to your retirement age.</div>
+          <div class="calcchip" id="investChip" style="margin-top:9px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-icon">🎯</div><h3>Other Expenses</h3></div>
+      <div class="card-bd">
+        <div class="field" style="margin-bottom:12px">
+          <label class="q-lbl">Are there larger expenses that do not fall every month?</label>
+          <div class="hint" style="font-style:normal;color:var(--g600);font-size:.73rem;line-height:1.5">
+            Tuition for the next few years, a yearly trip, an outstanding amortization you are still paying down,
+            a car you plan to replace. Add one row for each. <b>For how long</b> sets how many years it runs;
+            everything here is assumed to stop by the time you retire.
+          </div>
+        </div>
+        <div id="cmtList"></div>
+        <div class="cmt-empty" id="cmtEmpty">No other expenses added yet.</div>
+        <button type="button" class="cmt-add" onclick="addCommitment()">＋ Add an expense</button>
+        <div class="ncf" id="cmtTotalBox" style="display:none">
+          <div class="ncf-lbl">Total Other Expenses Before Retirement</div>
+          <div class="ncf-val" id="cmtTotalVal">₱0</div>
+          <div class="ncf-sub" id="cmtTotalSub"></div>
         </div>
       </div>
     </div>
@@ -822,7 +811,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
       <div class="card-bd">
         <div class="field">
           <div class="q-sub">Monthly Expense During Retirement</div>
-          <label class="q-lbl">Shall we use your computed monthly expense at retirement, or would you like to enter your own?</label>
+          <label class="q-lbl">Shall we estimate your computed monthly expense at retirement, or would you like to enter your own?</label>
           <div class="seg" id="expenseSeg">
             <button type="button" id="expComputedBtn" class="on" onclick="setExpenseMode('computed')">Use computed</button>
             <button type="button" id="expOwnBtn" onclick="setExpenseMode('own')">Input my own</button>
@@ -970,65 +959,42 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
 
       <!-- Your Life Now -->
       <div class="sc">
-        <div class="sc-hd"><h2>Your Life Now</h2><p>What you hold, earn and spend today — and how long you have</p></div>
+        <div class="sc-hd"><h2>Your Life Now</h2><p id="lifeNowSub">What you hold today, and what you earn and spend each month</p></div>
         <div class="nest-grid">
           <div class="nest-col">
             <h4>What You Have Now</h4>
-            <div class="nest-line"><span class="nl-lbl">Cash<span class="nl-sub" id="peCashSub"></span></span><span class="nl-val" id="peCash"></span></div>
-            <div class="nest-line"><span class="nl-lbl">Deposits / Time Deposits<span class="nl-sub" id="peDepSub"></span></span><span class="nl-val" id="peDep"></span></div>
-            <div class="nest-line"><span class="nl-lbl">Investments<span class="nl-sub" id="peInvSub"></span></span><span class="nl-val" id="peInv"></span></div>
-            <div class="nest-line tot"><span class="nl-lbl">Total Financial Assets Today</span><span class="nl-val" id="peAssetsNow"></span></div>
-            <div class="nest-line"><span class="nl-lbl">Real Estate<span class="nl-sub" style="font-style:normal;text-transform:none;font-weight:400">family home share + other real estate at today's value — excluded from retirement capital, appreciated to your retirement age in Estate Planning</span></span><span class="nl-val" id="peRealEstate"></span></div>
+            <div class="nest-line"><span class="nl-lbl">Deposits<span class="nl-sub" id="peDepSub"></span></span><span class="nl-val" id="peDep"></span></div>
+            <div class="nest-line"><span class="nl-lbl">Current Investments<span class="nl-sub" id="peInvSub"></span></span><span class="nl-val" id="peInv"></span></div>
+            <div class="nest-line tot rule-num"><span class="nl-lbl">Total Financial Assets Today</span><span class="nl-val" id="peAssetsNow"></span></div>
+
+            <div class="nest-line spaced"><span class="nl-lbl">Family Home<span class="nl-sub" id="peFamHomeSub"></span></span><span class="nl-val" id="peFamHome"></span></div>
+            <div class="nest-line"><span class="nl-lbl">Other Real Estate<span class="nl-sub" style="font-style:normal;text-transform:none;font-weight:400">land, condominiums, investment property</span></span><span class="nl-val" id="peOtherRE"></span></div>
+            <div class="nest-line tot rule-num"><span class="nl-lbl">Total Non-Financial Assets Today</span><span class="nl-val" id="peNonFinNow"></span></div>
+            <div class="nest-line" style="border:none;margin-top:4px"><span class="nl-lbl" style="font-style:italic;font-weight:400;text-transform:none;letter-spacing:0;color:var(--g600)">Excluded from retirement capital — appreciated to your retirement age in Estate Planning.</span></div>
           </div>
           <div class="nest-col">
-            <h4>Monthly Cash Flow &amp; Horizon</h4>
+            <h4>Monthly Cash Flow</h4>
             <div class="nest-line"><span class="nl-lbl">Monthly Income<span class="nl-sub" style="font-style:normal;text-transform:none;font-weight:400">salary + other income</span></span><span class="nl-val" id="peMonthlyInc"></span></div>
-            <div class="nest-line"><span class="nl-lbl">Monthly Expense<span class="nl-sub" style="font-style:normal;text-transform:none;font-weight:400">living + interest + other</span></span><span class="nl-val" id="peMonthlyExp"></span></div>
-            <div class="nest-line tot"><span class="nl-lbl">Net Monthly Cash Flow</span><span class="nl-val" id="peNetCF"></span></div>
-            <div class="nest-line"><span class="nl-lbl">Invested Regularly<span class="nl-sub" id="peRegSub"></span></span><span class="nl-val" id="peReg"></span></div>
-            <div class="nest-line" id="peCmtLine" style="display:none"><span class="nl-lbl">Big &amp; Recurring Commitments<span class="nl-sub" id="peCmtSub"></span></span><span class="nl-val" id="peCmt"></span></div>
-            <div class="nest-line"><span class="nl-lbl">Age Now</span><span class="nl-val" id="peAgeNow"></span></div>
-            <div class="nest-line"><span class="nl-lbl">Desired Retirement Age</span><span class="nl-val" id="peRetAge"></span></div>
-            <div class="nest-line tot"><span class="nl-lbl">Years Until Retirement</span><span class="nl-val" id="peYears"></span></div>
+            <div class="nest-line"><span class="nl-lbl">Monthly Expense<span class="nl-sub" style="font-style:normal;text-transform:none;font-weight:400">day-to-day living</span></span><span class="nl-val" id="peMonthlyExp"></span></div>
+            <div class="nest-line tot rule-num"><span class="nl-lbl">Net Monthly Cash Flow</span><span class="nl-val" id="peNetCF"></span></div>
+
+            <div class="nest-line spaced"><span class="nl-lbl">Invested Regularly<span class="nl-sub" id="peRegSub"></span></span><span class="nl-val" id="peReg"></span></div>
           </div>
         </div>
+      </div>
+
+      <!-- Cash Flow Before Retirement -->
+      <div class="sc">
+        <div class="sc-hd"><h2>Cash Flow Before Retirement</h2><p id="cashFlowSub">What you earn less what you spend, between today and your retirement age</p></div>
+        <div id="cashFlowBox"></div>
+        <div class="hint" id="cashFlowNote" style="margin-top:10px;line-height:1.55"></div>
       </div>
 
       <!-- Retirement Capital Build-up -->
       <div class="sc">
-        <div class="sc-hd"><h2>Retirement Capital from Your Life Now</h2><p>Everything above, carried forward to your retirement age</p></div>
+        <div class="sc-hd"><h2>Retirement Capital from Your Life Now</h2><p>Everything you hold and set aside, carried forward to your retirement age</p></div>
         <div id="capBuildBox"></div>
         <div class="hint" id="capBuildNote" style="margin-top:10px;line-height:1.55"></div>
-      </div>
-
-      <!-- Regular Investment Return Slider -->
-      <div class="sc" id="preSliderSec">
-        <div class="sc-hd"><h2>Adjust Your Assumed Return</h2><p>See how a different return before retirement changes your retirement capital</p></div>
-        <div class="ret-slider">
-          <div class="ret-slider-top">
-            <span class="ret-slider-label">Estimated net return p.a. on regular investments</span>
-            <span class="ret-slider-val" id="preSliderVal">6%</span>
-          </div>
-          <input type="range" id="preSlider" min="0" max="15" step="0.25" value="6">
-          <div class="ret-slider-note" id="preSliderNote"></div>
-        </div>
-      </div>
-
-      <!-- Year-by-year build-up -->
-      <div class="sc">
-        <div class="sc-hd"><h2>Year-by-Year Build-Up</h2><p>Your income, expenses and regular investing between today and retirement</p></div>
-        <button class="proj-toggle" id="preSinkToggle" onclick="togglePreSink()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-          Show year-by-year schedule
-        </button>
-        <div class="sink-collapse" id="preSinkCollapse">
-          <div class="proj-body open" style="margin-top:12px">
-            <table class="sink-table"><thead><tr>
-              <th>Yr</th><th>Age</th><th>Annual Income</th><th>Annual Expense</th><th>Commitments</th><th>Invested</th><th>Uninvested Net</th><th>Value at Retirement</th>
-            </tr></thead>
-            <tbody id="preTb"></tbody><tfoot id="preTf"></tfoot></table>
-          </div>
-        </div>
       </div>
 
     </div><!-- /rtab0 pre-retirement -->
@@ -1054,8 +1020,8 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
           </div>
           <div class="nest-col">
             <h4>Retirement Capital</h4>
-            <div class="nest-line"><span class="nl-lbl">Expected Retirement Pay</span><span class="nl-val" id="neCash"></span></div>
-            <div class="nest-line"><span class="nl-lbl">Add: Retirement Capital from Your Life Now<span class="nl-sub">assets, income and regular investing, all carried to retirement age (Tab 1)</span></span><span class="nl-val" id="nePreFund"></span></div>
+            <div class="nest-line"><span class="nl-lbl">Retirement Capital from Your Life Now<span class="nl-sub">deposits, investments and regular investing, all carried to retirement age (Tab 1)</span></span><span class="nl-val" id="nePreFund"></span></div>
+            <div class="nest-line"><span class="nl-lbl">Add: Expected Retirement Pay</span><span class="nl-val" id="neCash"></span></div>
             <div class="nest-line"><span class="nl-lbl">Less: Outstanding liabilities</span><span class="nl-val" id="neLiab"></span></div>
             <div class="nest-line"><span class="nl-lbl">Less: Planned big purchase</span><span class="nl-val" id="neGift"></span></div>
             <div class="nest-line" id="neCmtLine" style="display:none"><span class="nl-lbl">Set aside for commitments during retirement<span class="nl-sub" id="neCmtSub"></span></span><span class="nl-val" id="neCmt"></span></div>
@@ -1097,6 +1063,14 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
             <div class="sc-desc" id="scMaintainDesc"></div>
             <div class="sc-stats" id="scMaintainStats"></div>
           </div>
+          <div class="adjuster" id="fundReturnBox">
+            <span class="adjuster-label">Assumed return on what you invest to close the gap:</span>
+            <div class="slider-wrap">
+              <input type="range" id="fundReturnSlider" min="0" max="15" step="0.25" value="6">
+              <span class="slider-val" id="fundReturnVal">6%</span>
+            </div>
+            <div class="adjuster-result" id="fundReturnResult"></div>
+          </div>
         </div>
 
         <!-- Adjust your Lifestyle = reduce spending so the nest egg lasts the full period -->
@@ -1111,7 +1085,8 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
             <span class="adjuster-label">Adjust your monthly spending target:</span>
             <div class="slider-wrap">
               <input type="range" id="spendingSlider" min="0" max="200000" step="1000" value="0">
-              <span class="slider-val" id="sliderVal">₱0</span>
+              <span class="slider-val-wrap"><span class="slider-val" id="sliderVal">₱0</span>
+                <div class="slider-val-pv" id="sliderValPv"></div></span>
             </div>
             <div class="adjuster-result" id="adjResult">Move the slider to explore different spending levels.</div>
           </div>
@@ -1327,11 +1302,6 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
       <p style="margin:0">Accordingly, all results are estimates only and are indicative in nature. They do not substitute for the advice, review, or certification of a licensed CPA, tax practitioner, or legal professional, and should not be relied upon for tax filing, estate planning, or compliance purposes.</p>
     </div>
   </div>
-  <div style="margin-top:18px;display:inline-block;padding:12px 22px;background:var(--ruby-bg);border:1px solid var(--ruby-bdr);border-left:4px solid var(--ruby);border-radius:8px;text-align:left">
-    <div style="font-size:.66rem;font-weight:800;color:var(--ruby);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Your BPI Personal Wealth Advisor</div>
-    <div style="font-size:.95rem;font-weight:800;color:var(--g800)">Neena Tengco</div>
-    <div style="font-size:.8rem;color:var(--g600);margin-top:2px"><strong style="color:var(--ruby)">Mobile</strong> 0918-944-7983 &nbsp;·&nbsp; <strong style="color:var(--ruby)">Email</strong> srtengco@bpi.com.ph</div>
-  </div>
 </footer>
 
 <div id="pdfReport"></div>
@@ -1343,20 +1313,28 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
  * RETIREREADY CALCULATOR v4
  *
  * TAB 1 — RETIREMENT CAPITAL FROM YOUR LIFE NOW
- *  x                  = desired retirement age − age now
- *  carryR             = regular-investment return p.a. if the surplus is invested, else 0
- *  fvAssets           = cash×(1+cashR)^x + deposits×(1+depR)^x + investments×(1+invR)^x
- *  income_t           = salary×12×(1+gSalary)^(t−1) + otherIncome×12×(1+gOther)^(t−1)
- *  expense_t          = (living + interest + other)×12×(1+inf)^(t−1)
- *  redirect_t         = regular monthly investment × 12          [carved out of the net cash flow]
- *  fvIncome           = Σ income_t   × (1+carryR)^(x−t)
- *  fvExpense          = Σ expense_t  × (1+carryR)^(x−t)
- *  fvRedirect         = Σ redirect_t × (1+carryR)^(x−t)
- *  fvRegular          = FV of a monthly ordinary annuity of the regular investment @ regR
- *  CAPITAL            = fvAssets + (fvIncome − fvExpense − fvRedirect) + fvRegular
- *      The redirect line prevents double-counting: the money invested regularly IS the
- *      surplus of income over expenses, so it is removed from that stream and added back
- *      at its own investment return. Real estate is EXCLUDED — it flows to Tab 3 only.
+ *  x        = desired retirement age − current age
+ *  depR     = deposit rate      regR = return on regular investments      invR = return on
+ *             current investments
+ *
+ *  CASH FLOW (nominal pesos, year t counted from today)
+ *    income_t   = salary×12×(1+gSalary)^(t−1) + otherIncome×12×(1+gOther)^(t−1)
+ *    expense_t  = living×12×(1+inflation)^(t−1)
+ *    other_t    = other expenses falling in year t, each on its own escalation
+ *    net_t      = income_t − expense_t − other_t
+ *    invested_t = pct × max(0, net_t)      — a deficit year invests nothing
+ *    residual_t = net_t − invested_t       — assumed to stay in the deposit account
+ *
+ *  RETIREMENT CAPITAL (all carried to the retirement age)
+ *    fvDeposits  = deposits    × (1 + depR)^x
+ *    fvCurrent   = investments × (1 + invR)^x
+ *    fvRegular   = Σ [12-month annuity of invested_t/12 @ regR] × (1 + regR)^(x−t)
+ *    fvResidual  = Σ residual_t × (1 + depR)^x−t
+ *    CAPITAL     = fvDeposits + fvCurrent + fvRegular + fvResidual
+ *
+ *  Nothing is counted twice: the surplus either goes into the investment (fvRegular) or
+ *  stays in deposits (fvResidual), never both. Real estate is EXCLUDED — it flows to
+ *  Tab 3 (Estate Planning) only.
  *
  * TAB 2 — RETIREMENT PLANNING
  *  monthlyExpense     = livingExpenseToday × (1+inf)^x   [or the advisor's own figure,
@@ -1402,7 +1380,7 @@ const gvS  = id => document.getElementById(id)?.value||'';
 const hasVal = id => { const el=document.getElementById(id); const v=el?.value; if(!v)return false; return !isNaN(parseFloat(String(v).replace(/,/g,''))); };
 
 /* ── COMMA FORMATTING ── */
-const CURRENCY_IDS=['nowCash','nowDeposits','nowInvestments','familyHomeValue','otherRealEstate','salaryMonthly','otherIncomeNow','livingExpense','interestExpense','otherExpenseNow','regularInvestAmt','monthlyIncome','monthlyExpense','cashAvailable','liabilities','specialAllotment'];
+const CURRENCY_IDS=['nowDeposits','nowInvestments','familyHomeValue','otherRealEstate','salaryMonthly','otherIncomeNow','livingExpense','monthlyIncome','monthlyExpense','cashAvailable','liabilities','specialAllotment'];
 function handleCurrencyInput(el){
   const pos=el.selectionStart; const old=el.value; const oldLen=old.length;
   const raw=old.replace(/,/g,'').replace(/[^\d.]/g,'');
@@ -1456,17 +1434,18 @@ function horizon(){
 
 /* Category presets: default escalation, default frequency, default "continues" answer.
    rate:null means "use the client's general inflation assumption". */
+/* Every row stops at retirement — how long it runs is set by "For how long". */
 const CMT_CATEGORIES = [
-  {v:'tuition',   label:'Tuition / education',            rate:8,    freq:'1',  cont:'No',  hint:'Philippine tuition has run well above headline inflation — 8% p.a. is a common planning assumption.'},
-  {v:'travel',    label:'Travel',                          rate:null, freq:'1',  cont:'Yes', hint:'A yearly trip. Most clients keep travelling in retirement.'},
-  {v:'insurance', label:'Insurance premium',               rate:0,    freq:'1',  cont:'Yes', hint:'Premiums on a fixed schedule usually do not escalate — left at 0%.'},
-  {v:'property',  label:'Property tax & association dues', rate:null, freq:'1',  cont:'Yes', hint:'Recurring for as long as the property is held.'},
-  {v:'vehicle',   label:'Vehicle purchase or replacement', rate:null, freq:'0',  cont:'No',  hint:'A single purchase in a future year.'},
-  {v:'renovation',label:'Home renovation',                 rate:null, freq:'0',  cont:'No',  hint:'A single project in a future year.'},
-  {v:'support',   label:'Family support or allowance',     rate:null, freq:'12', cont:'Yes', hint:'Regular support to parents or relatives.'},
-  {v:'medical',   label:'Medical & healthcare',            rate:6,    freq:'1',  cont:'Yes', hint:'Medical costs typically outpace general inflation.'},
-  {v:'wedding',   label:'Wedding or celebration',          rate:null, freq:'0',  cont:'No',  hint:'A single event in a future year.'},
-  {v:'other',     label:'Other',                           rate:null, freq:'1',  cont:'No',  hint:''}
+  {v:'tuition',   label:'Tuition / education',            rate:8,    freq:'1',  hint:'Philippine tuition has run well above headline inflation — 8% p.a. is a common planning assumption.'},
+  {v:'amort',     label:'Outstanding amortization',        rate:0,    freq:'12', hint:'A loan you are still paying down. Fixed amortizations do not escalate — left at 0%.'},
+  {v:'travel',    label:'Travel',                          rate:null, freq:'1',  hint:'A yearly trip.'},
+  {v:'property',  label:'Property tax & association dues', rate:null, freq:'1',  hint:'Recurring for as long as the property is held.'},
+  {v:'vehicle',   label:'Vehicle purchase or replacement', rate:null, freq:'0',  hint:'A single purchase in a future year.'},
+  {v:'renovation',label:'Home renovation',                 rate:null, freq:'0',  hint:'A single project in a future year.'},
+  {v:'support',   label:'Family support or allowance',     rate:null, freq:'12', hint:'Regular support to parents or relatives.'},
+  {v:'medical',   label:'Medical & healthcare',            rate:6,    freq:'1',  hint:'Medical costs typically outpace general inflation.'},
+  {v:'wedding',   label:'Wedding or celebration',          rate:null, freq:'0',  hint:'A single event in a future year.'},
+  {v:'other',     label:'Other',                           rate:null, freq:'1',  hint:''}
 ];
 const CMT_FREQ = {'0':{label:'One-time',per:1},'12':{label:'Monthly',per:12},'4':{label:'Quarterly',per:4},'2':{label:'Semi-annually',per:2},'1':{label:'Annually',per:1}};
 
@@ -1505,14 +1484,6 @@ function addCommitment(preset){
         <div class="hint cmt-rate-hint"></div>
       </div>
     </div>
-    <div class="cmt-when">
-      <span class="cmt-when-lbl">In retirement</span>
-      <div class="seg">
-        <button type="button" class="cmt-cont-yes" onclick="setCmtCont(this,'Yes')">Continues</button>
-        <button type="button" class="cmt-cont-no" onclick="setCmtCont(this,'No')">Stops at retirement</button>
-      </div>
-      <input type="hidden" class="cmt-cont" value="No">
-    </div>
     <div class="cmt-sum"></div>`;
   list.appendChild(row);
 
@@ -1534,7 +1505,6 @@ function addCommitment(preset){
     if(preset.start!=null)row.querySelector('.cmt-start').value=preset.start;
     if(preset.years!=null)row.querySelector('.cmt-years').value=preset.years;
     if(preset.rate!=null)row.querySelector('.cmt-rate').value=preset.rate;
-    if(preset.cont!=null)row.querySelector('.cmt-cont').value=preset.cont;
   } else {
     applyCmtCategory(row,true);
   }
@@ -1550,7 +1520,6 @@ function applyCmtCategory(row,resetDefaults){
   if(resetDefaults){
     row.querySelector('.cmt-rate').value = c.rate==null ? String(infl) : String(c.rate);
     row.querySelector('.cmt-freq').value = c.freq;
-    row.querySelector('.cmt-cont').value = c.cont;
     if(c.freq==='0') row.querySelector('.cmt-years').value='1';
   }
   const h=row.querySelector('.cmt-rate-hint');
@@ -1559,11 +1528,6 @@ function applyCmtCategory(row,resetDefaults){
   if(s)s.dataset.catHint=c.hint||'';
 }
 
-function setCmtCont(btn,v){
-  const row=btn.closest('.cmt-row');
-  row.querySelector('.cmt-cont').value=v;
-  render();
-}
 function removeCommitment(btn){
   const row=btn.closest('.cmt-row');
   if(row)row.remove();
@@ -1586,7 +1550,7 @@ function readCommitments(){
     const ongoing  = !oneTime && (yearsRaw===''||yearsRaw==null||num(yearsRaw)<=0);
     const years    = oneTime ? 1 : (ongoing ? Infinity : Math.max(1,Math.round(num(yearsRaw))));
     const rate   = num(row.querySelector('.cmt-rate').value)/100;
-    const cont   = row.querySelector('.cmt-cont').value==='Yes';
+    const cont   = false;   // every other expense stops at retirement
     const from   = start<=0 ? 1 : start;                 // first year it falls, counted from now
     const to     = years===Infinity ? Infinity : from+years-1;
     out.push({idx:i+1,row,catV,label:cat.label,amount,freqK,per,oneTime,ongoing,start,years,rate,cont,from,to,
@@ -1645,14 +1609,12 @@ function computeNow(rateOverride){
   const inf = gv('inflation')/100;
 
   /* ── Assets ── */
-  const cash   = gv('nowCash'),        cashR = gv('nowCashRate')/100;
   const dep    = gv('nowDeposits'),    depR  = gv('nowDepositsRate')/100;
   const inv    = gv('nowInvestments'), invR  = gv('nowInvestRate')/100;
-  const fvCash = cash*Math.pow(1+cashR,x);
   const fvDep  = dep *Math.pow(1+depR ,x);
   const fvInv  = inv *Math.pow(1+invR ,x);
-  const assetsNow = cash+dep+inv;
-  const fvAssets  = fvCash+fvDep+fvInv;
+  const assetsNow = dep+inv;
+  const fvAssets  = fvDep+fvInv;
 
   /* ── Real estate (estate planning only) ── */
   const familyHomeValue = gv('familyHomeValue');
@@ -1664,56 +1626,71 @@ function computeNow(rateOverride){
   /* ── Monthly income & expense today ── */
   const salary = gv('salaryMonthly'),   gS = gv('salaryGrowth')/100;
   const othInc = gv('otherIncomeNow'),  gO = gv('otherIncomeGrowth')/100;
-  const living = gv('livingExpense'), interest = gv('interestExpense'), othExp = gv('otherExpenseNow');
+  const living = gv('livingExpense');
   const monthlyIncomeNow  = salary+othInc;
-  const monthlyExpenseNow = living+interest+othExp;
+  const monthlyExpenseNow = living;
   const netMonthly        = monthlyIncomeNow-monthlyExpenseNow;
 
-  /* ── Regular investing of the surplus ── */
-  const wantsInvest = gvS('investSurplus')==='Yes';
+  /* ── Regular investing: a PERCENTAGE of each year's cash flow ──
+     The client commits a share of their surplus, not a fixed peso amount, so the
+     amount invested grows as their salary does. */
+  const wantsInvest = (gvS('investSurplus')||'Yes')==='Yes';
   const regRField   = (rateOverride!=null?rateOverride:gv('regularInvestRate'))/100;
-  const regAmt      = wantsInvest ? gv('regularInvestAmt') : 0;
+  const regPct      = wantsInvest ? Math.min(100,Math.max(0,gv('regularInvestPct')))/100 : 0;
   const regR        = wantsInvest ? regRField : 0;
-  const carryR      = regR;   // rate used to carry income/expenses forward
+  /* Whatever is NOT invested is assumed to sit in the deposit account, so it is carried
+     forward at the deposit rate rather than at the investment return. */
+  const carryR      = depR;
+  const regAmt      = Math.max(0, netMonthly)*regPct;   // this year's monthly amount
 
   /* ── Big & recurring commitments ── */
   const commitments = readCommitments();
 
-  /* ── Year-by-year income / expense / commitments / redirection ── */
-  let fvIncome=0, fvExpense=0, fvRedirect=0, fvCommit=0, nominalCommit=0;
+  /* ── Year-by-year cash flow ──
+     Net cash flow in a year = income, less the inflated monthly living expense, less any
+     other expenses falling that year. A chosen percentage of that surplus is invested at
+     the investment return; whatever is left is assumed to stay in the deposit account and
+     is carried forward at the deposit rate. A deficit year simply invests nothing — the
+     shortfall is assumed to be covered from outside the plan. */
+  let nominalIncome=0, nominalExpense=0, nominalCommit=0, nominalNet=0;
+  let fvRegular=0, totalRegular=0, fvResidual=0, totalResidual=0;
   const rows=[];
   for(let t=1;t<=Math.min(x,70);t++){
     const incT = salary*12*Math.pow(1+gS,t-1) + othInc*12*Math.pow(1+gO,t-1);
     const expT = monthlyExpenseNow*12*Math.pow(1+inf,t-1);
     const cmtT = cmtTotalAt(commitments,t,'pre');
-    const redT = regAmt*12;
-    const cf   = Math.pow(1+carryR, x-t);
-    fvIncome   += incT*cf;
-    fvExpense  += expT*cf;
-    fvCommit   += cmtT*cf;
-    fvRedirect += redT*cf;
-    nominalCommit += cmtT;
-    const net  = incT-expT-cmtT-redT;
-    rows.push({y:t, age:H.ageNow+t, inc:incT, exp:expT, cmt:cmtT, red:redT, net, fv:net*cf});
+    const netT = incT-expT-cmtT;
+
+    const investMoT = wantsInvest ? Math.max(0, netT/12)*regPct : 0;
+    const redT      = investMoT*12;
+    const residT    = netT-redT;              // may be negative in a deficit year
+
+    nominalIncome  += incT;
+    nominalExpense += expT;
+    nominalCommit  += cmtT;
+    nominalNet     += netT;
+    totalRegular   += redT;
+    totalResidual  += residT;
+    fvRegular  += fvOrdinaryAnnuity(investMoT, regR/12, 12)*Math.pow(1+regR, x-t);
+    fvResidual += residT*Math.pow(1+carryR, x-t);
+    rows.push({y:t, age:H.ageNow+t, inc:incT, exp:expT, cmt:cmtT, red:redT, net:netT, resid:residT});
   }
 
-  const fvRegular       = wantsInvest ? fvOrdinaryAnnuity(regAmt, regR/12, x*12) : 0;
-  const totalRegular    = regAmt*12*x;
-  const regularGains    = fvRegular-totalRegular;
-  const fvNetUninvested = fvIncome-fvExpense-fvCommit-fvRedirect;
-  const capital         = fvAssets + fvNetUninvested + fvRegular;
+  const regularGains = fvRegular-totalRegular;
+  const capital      = fvAssets + fvRegular + fvResidual;
 
   return {
     ...H, inf,
-    cash,cashR,dep,depR,inv,invR,fvCash,fvDep,fvInv,assetsNow,fvAssets,assetGains:fvAssets-assetsNow,
+    dep,depR,inv,invR,fvDep,fvInv,assetsNow,fvAssets,assetGains:fvAssets-assetsNow,
     familyHomeValue,famOther,familyHomeShare,otherRealEstate,realEstate,
-    salary,gS,othInc,gO,living,interest,othExp,
+    salary,gS,othInc,gO,living,
     monthlyIncomeNow,monthlyExpenseNow,netMonthly,
-    wantsInvest,regAmt,regR,carryR,
-    fvIncome,fvExpense,fvRedirect,fvNetUninvested,fvRegular,totalRegular,regularGains,
-    commitments,fvCommit,nominalCommit,hasCommitments:commitments.some(c=>c.annual>0),
+    wantsInvest,regAmt,regPct,regR,carryR,
+    nominalIncome,nominalExpense,nominalCommit,nominalNet,
+    fvRegular,totalRegular,regularGains,fvResidual,totalResidual,
+    commitments,hasCommitments:commitments.some(c=>c.annual>0),
     capital, rows,
-    hasInputs: hasVal('nowCash')||hasVal('nowDeposits')||hasVal('nowInvestments')||
+    hasInputs: hasVal('nowDeposits')||hasVal('nowInvestments')||
                hasVal('salaryMonthly')||hasVal('otherIncomeNow')||hasVal('livingExpense')
   };
 }
@@ -1901,7 +1878,7 @@ function computeEstate(retCapital){
    * Real estate is held at today's estimated value. */
   const capitalGiven     = retCapital!=null;
   const netRetCapital    = capitalGiven ? retCapital
-                         : (gv('nowCash')+gv('nowDeposits')+gv('nowInvestments'));
+                         : (gv('nowDeposits')+gv('nowInvestments'));
   const financialAssets  = Math.max(0, netRetCapital);
   const capitalDepleted  = capitalGiven && netRetCapital<=0;
   const cashAvail        = financialAssets;
@@ -2152,7 +2129,7 @@ function syncInvestUI(){
 
   // Live net cash flow readout
   const inc=gv('salaryMonthly')+gv('otherIncomeNow');
-  const exp=gv('livingExpense')+gv('interestExpense')+gv('otherExpenseNow');
+  const exp=gv('livingExpense');
   const net=inc-exp;
   const box=document.getElementById('ncfBox');
   const val=document.getElementById('ncfVal');
@@ -2174,8 +2151,16 @@ function syncInvestUI(){
   const hint=document.getElementById('investHint');
   if(hint){
     hint.innerHTML = v==='Yes'
-      ? 'Your regular investment is carved out of your monthly surplus and grown at the return below, so it is never counted twice.'
-      : 'Without regular investing, your future surplus simply accumulates as cash — it is carried forward at 0%.';
+      ? 'Your regular investment is carved out of your monthly cash flow and grown at the return below, so it is never counted twice.'
+      : 'Without regular investing, your future cash flow simply accumulates as cash — it is carried forward at 0%.';
+  }
+  const chip=document.getElementById('investChip');
+  if(chip){
+    const pct=Math.min(100,Math.max(0,gv('regularInvestPct')))/100;
+    const amt=Math.max(0,net)*pct;
+    chip.innerHTML = net>0
+      ? `That is <b>${fP(amt)} a month</b> today — ${fmt(pct*100,0)}% of your ${fP(net)} cash flow. As your income grows, the amount invested grows with it.`
+      : `Once your income covers your expenses, ${fmt(pct*100,0)}% of the surplus would be invested at this return.`;
   }
 }
 /* Per-row plain-language summary, plus the card total. Keeps the advisor oriented
@@ -2185,9 +2170,6 @@ function syncCommitmentsUI(){
   const H=horizon();
   document.querySelectorAll('#cmtList .cmt-row').forEach((row,i)=>{
     const n=row.querySelector('.cmt-row-num'); if(n)n.textContent=String(i+1);
-    const yes=row.querySelector('.cmt-cont-yes'), no=row.querySelector('.cmt-cont-no');
-    const v=row.querySelector('.cmt-cont').value;
-    if(yes&&no){yes.classList.toggle('on',v==='Yes');no.classList.toggle('on',v==='No');}
     const yearsField=row.querySelector('.cmt-years');
     if(yearsField)yearsField.disabled = row.querySelector('.cmt-freq').value==='0';
 
@@ -2199,13 +2181,11 @@ function syncCommitmentsUI(){
     const howLong = c.oneTime ? '' : (c.ongoing ? ', ongoing' : `, for ${c.years} year${c.years>1?'s':''}`);
     // What it costs in the first year it actually falls, and in total before retirement.
     const firstCost = cmtCostAt(c, c.from);
-    let nominal=0, insideRet=0;
+    let nominal=0;
     for(let t=1;t<=Math.min(H.x,70);t++) nominal+=cmtCostAt(c,t);
-    if(c.cont){ for(let k=1;k<=Math.max(1,Math.round(gv('retirementPeriod')||20));k++) insideRet+=cmtCostAt(c,H.x+k); }
     sum.innerHTML=`<b>${fP(c.annual)}</b> ${c.oneTime?'':'a year '}${when}${howLong}, rising ${fmt(c.rate*100,2).replace(/\.?0+$/,'')}% a year`+
       (c.from>1?` — <b>${fP(firstCost)}</b> by the time it first falls`:'')+
-      (H.x>0?`. Total before retirement: <b>${fP(nominal)}</b>`:'')+
-      (c.cont&&insideRet>0?`, plus <b>${fP(insideRet)}</b> during retirement.`:c.cont?'.':'. Stops at retirement.');
+      (H.x>0?`. Total before retirement: <b>${fP(nominal)}</b>.`:'.');
   });
 
   const empty=document.getElementById('cmtEmpty');
@@ -2224,7 +2204,7 @@ function syncCommitmentsUI(){
     box.style.display='';
     box.className='ncf'+(total>0?' neg':'');
     document.getElementById('cmtTotalVal').textContent=fP(total);
-    const monthlyNet=(gv('salaryMonthly')+gv('otherIncomeNow'))-(gv('livingExpense')+gv('interestExpense')+gv('otherExpenseNow'));
+    const monthlyNet=(gv('salaryMonthly')+gv('otherIncomeNow'))-gv('livingExpense');
     const heaviest=peak>0?` Your heaviest year is year ${peakYear} (age ${H.ageNow+peakYear}) at <b>${fP(peak)}</b>`:'';
     const vsSurplus=(peak>0&&monthlyNet>0)
       ? ` — against a monthly surplus of ${fP(monthlyNet)}, or ${fP(monthlyNet*12)} a year.`
@@ -2270,26 +2250,22 @@ function syncRetSlider(){
 }
 
 /* ── TAB 1 RENDERS ── */
-function syncPreSlider(){
-  const s=document.getElementById('preSlider');if(!s)return;
-  const v=gv('regularInvestRate');
-  s.value=v;
-  document.getElementById('preSliderVal').textContent=v.toFixed(2).replace(/\.?0+$/,'')+'%';
-  document.getElementById('preSliderNote').innerHTML='';
-  const sec=document.getElementById('preSliderSec');
-  if(sec)sec.style.display = gvS('investSurplus')==='Yes' ? '' : 'none';
-}
+function syncPreSlider(){ /* the Tab 1 return slider was removed — the rate lives on the form */ }
 
 function renderNow(p,c){
   const rate=n=>n>0?`${fmt(n*100,2).replace(/\.?0+$/,'')}% p.a.`:'';
   const set=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
 
   /* ── Your Life Now ── */
-  set('peCash',fP(p.cash));        set('peCashSub',rate(p.cashR));
   set('peDep',fP(p.dep));          set('peDepSub',rate(p.depR));
   set('peInv',fP(p.inv));          set('peInvSub',rate(p.invR));
   set('peAssetsNow',fP(p.assetsNow));
-  set('peRealEstate',fP(p.realEstate));
+  set('peFamHome',fP(p.familyHomeShare));
+  set('peFamHomeSub',p.famOther>0
+    ? `your share — ${fP(p.familyHomeValue)} split across ${p.famOther+1} names on title`
+    : `at today's estimated value`);
+  set('peOtherRE',fP(p.otherRealEstate));
+  set('peNonFinNow',fP(p.realEstate));
   set('peMonthlyInc',fP(p.monthlyIncomeNow));
   set('peMonthlyExp',fP(p.monthlyExpenseNow));
   const netEl=document.getElementById('peNetCF');
@@ -2297,18 +2273,7 @@ function renderNow(p,c){
     ? `<span style="color:var(--ruby)">(${fP(Math.abs(p.netMonthly))})</span>`
     : fP(p.netMonthly);
   set('peReg',p.wantsInvest?fP(p.regAmt):'Not investing');
-  set('peRegSub',p.wantsInvest?`monthly at ${fmt(p.regR*100,2).replace(/\.?0+$/,'')}% p.a.`:'');
-  const cmtLine=document.getElementById('peCmtLine');
-  if(cmtLine){
-    const live=p.commitments.filter(cm=>cm.annual>0);
-    cmtLine.style.display = live.length ? '' : 'none';
-    set('peCmt',fP(p.nominalCommit));
-    set('peCmtSub',live.length?`${live.length} commitment${live.length>1?'s':''} — total paid out before retirement`:'');
-  }
-  set('peAgeNow',p.valid?p.ageNow+' yrs':(hasVal('ageNow')?p.ageNow+' yrs':'—'));
-  set('peRetAge',p.retAge+' yrs');
-  set('peYears',p.valid?p.x+' yrs':'—');
-
+  set('peRegSub',p.wantsInvest?`${fmt(p.regPct*100,0)}% of cash flow, monthly at ${fmt(p.regR*100,2).replace(/\.?0+$/,'')}% p.a.`:'');
   /* ── Verdict ── */
   const box=document.getElementById('preVerdictBox');
   const lbl=document.getElementById('preVerdictLabel');
@@ -2328,74 +2293,74 @@ function renderNow(p,c){
     box.className='verdict ok';
     lbl.textContent='✅ Your life now builds retirement capital';
     hdg.textContent=`By age ${p.retAge}, your assets, income and spending as they stand today build ${fP(p.capital)}.`;
-    sub.innerHTML=`That is what carries into your <b>Retirement Planning</b> tab as retirement capital${p.wantsInvest?`, including ${fP(p.fvRegular)} from investing ${fP(p.regAmt)} a month at ${fmt(p.regR*100,2).replace(/\.?0+$/,'')}% p.a`:''}. Real estate is excluded here and carried to Estate Planning instead.`;
+    sub.innerHTML=`That is what carries into your <b>Retirement Planning</b> tab as retirement capital${p.wantsInvest?`, including ${fP(p.fvRegular)} from investing ${fmt(p.regPct*100,0)}% of your cash flow at ${fmt(p.regR*100,2).replace(/\.?0+$/,'')}% p.a`:''}. Real estate is excluded here and carried to Estate Planning instead.`;
   }
 
-  /* ── Capital build-up ── */
-  const line=(lbl2,val,opt)=>{
+  /* ── Cash flow before retirement, then retirement capital ──
+     Two cards. The first is the plain cash-flow story in the pesos that actually change
+     hands: what comes in, what goes out, what is left. The second carries what you hold
+     and what you set aside forward to the retirement age. Nothing appears in both. */
+  const mk=(cls)=>(lbl2,val,opt)=>{
     const o=opt||{};
-    return `<div class="gap-row${o.tot?' tot':''}${o.indent?' indent':''}">
+    return `<div class="${cls}${o.tot?' tot':''}${o.ruleNum?' rule-num':''}${o.spaced?' spaced':''}${o.indent?' indent':''}">
       <span class="gr-lbl">${lbl2}${o.sub?`<span class="gr-sub">${o.sub}</span>`:''}</span>
       <span class="gr-val"${o.color?` style="color:${o.color}"`:''}>${val}</span></div>`;
   };
+  const line=mk('gap-row');
   const neg=v=>v<0?'('+fP(Math.abs(v))+')':fP(v);
+  const pct=r0=>fmt(r0*100,2).replace(/\.?0+$/,'');
   const yrsTxt=p.valid?`${p.x} years`:'the years to retirement';
-  document.getElementById('capBuildBox').innerHTML=
-    line('Future value of cash',fP(p.fvCash),{indent:true,sub:`${fP(p.cash)} at ${fmt(p.cashR*100,2).replace(/\.?0+$/,'')}% p.a.`})+
-    line('Future value of deposits / time deposits',fP(p.fvDep),{indent:true,sub:`${fP(p.dep)} at ${fmt(p.depR*100,2).replace(/\.?0+$/,'')}% p.a.`})+
-    line('Future value of investments',fP(p.fvInv),{indent:true,sub:`${fP(p.inv)} at ${fmt(p.invR*100,2).replace(/\.?0+$/,'')}% p.a.`})+
-    line('Future value of assets, excluding real estate',fP(p.fvAssets),{tot:true})+
-    line('Add: Future value of income',fP(p.fvIncome),{sub:`salary and other income over ${yrsTxt}, escalated each year`,color:'var(--green)'})+
-    line('Less: Future value of expenses',`(${fP(p.fvExpense)})`,{sub:`living, interest and other expenses, inflated each year`,color:'var(--ruby)'})+
+  const over =p.valid?` at ${p.x} years`:'';
+
+  /* ── Card 1: cash flow before retirement (nominal pesos) ── */
+  document.getElementById('cashFlowBox').innerHTML=
+    line('Total income',fP(p.nominalIncome),{
+      sub:`annual salary increase at ${pct(p.gS)}%${p.othInc>0?` and other income at ${pct(p.gO)}%`:''} over ${yrsTxt}`,
+      color:'var(--green)'})+
+    line('Less: Total living expenses',`(${fP(p.nominalExpense)})`,{
+      sub:`${fP(p.living)} a month today, inflated at ${pct(p.inf)}% a year`,color:'var(--ruby)'})+
     (p.hasCommitments
-      ? line('Less: Future value of big &amp; recurring commitments',`(${fP(p.fvCommit)})`,{sub:p.commitments.filter(cm=>cm.annual>0).map(cm=>cm.label).join(', ')+` — ${fP(p.nominalCommit)} paid out over ${yrsTxt}`,color:'var(--ruby)'})
+      ? line('Less: Total other expenses',`(${fP(p.nominalCommit)})`,{
+          sub:p.commitments.filter(cm=>cm.annual>0).map(cm=>cm.label).join(', ')+' — one-time and recurring',color:'var(--ruby)'})
       : '')+
+    line('Net Cash Flow Before Retirement',neg(p.nominalNet),{tot:true,ruleNum:true,
+      color:p.nominalNet<0?'var(--ruby)':'var(--green)'})+
     (p.wantsInvest
-      ? line('Less: Surplus redirected into regular investing',`(${fP(p.fvRedirect)})`,{sub:'removed from the net cash flow above so it is not counted twice',color:'var(--ruby)'})+
-        line('Add: Future value of regular investments',fP(p.fvRegular),{sub:`${fP(p.regAmt)} a month for ${yrsTxt} at ${fmt(p.regR*100,2).replace(/\.?0+$/,'')}% p.a. — ${fP(p.totalRegular)} contributed, ${fP(p.regularGains)} growth`,color:'var(--green)'})
+      ? line('Of which, invested regularly',fP(p.totalRegular),{indent:true,spaced:true,
+          sub:`${fmt(p.regPct*100,0)}% of each year's surplus, at ${pct(p.regR)}% p.a.`})
       : '')+
-    line('Retirement Capital from Your Life Now',neg(p.capital),{tot:true,color:p.capital<0?'var(--ruby)':'var(--green)'});
+    line('Of which, left in deposits',neg(p.totalResidual),{indent:true,
+      sub:`stays in your deposit account, earning ${pct(p.depR)}% p.a.`});
+
+  const cfSub=document.getElementById('cashFlowSub');
+  if(cfSub)cfSub.textContent = p.valid
+    ? `What you earn less what you spend over the ${p.x} years from age ${p.ageNow} to age ${p.retAge}`
+    : `What you earn less what you spend between today and your retirement age`;
+  document.getElementById('cashFlowNote').innerHTML=
+    `These are the pesos that actually change hands between now and age ${p.retAge} — not future values. `+
+    (p.wantsInvest
+      ? `Each year you invest ${fmt(p.regPct*100,0)}% of that year's surplus; whatever is left over is assumed to stay in your deposit account. `
+      : `You are not investing regularly, so the whole surplus is assumed to stay in your deposit account. `)+
+    `A year where expenses exceed income invests nothing — the shortfall is assumed to be covered from outside this plan.`;
+
+  /* ── Card 2: retirement capital ── */
+  document.getElementById('capBuildBox').innerHTML=
+    line('Future value of deposits',neg(p.fvDep+p.fvResidual),{
+      sub:`${fP(p.dep)} you hold today plus ${fP(p.totalResidual)} of cash flow left unspent, all at ${pct(p.depR)}% p.a.${over}`,
+      color:(p.fvDep+p.fvResidual)<0?'var(--ruby)':''})+
+    line('Future value of current investments',fP(p.fvInv),{sub:`${fP(p.inv)} at ${pct(p.invR)}% p.a.${over}`})+
+    (p.wantsInvest
+      ? line('Future value of regular investments',fP(p.fvRegular),{
+          sub:`${fP(p.totalRegular)} invested over ${yrsTxt} at ${pct(p.regR)}% p.a. — ${fP(p.regularGains)} growth`})
+      : '')+
+    line('Retirement Capital from Your Life Now',neg(p.capital),{tot:true,ruleNum:true,
+      color:p.capital<0?'var(--ruby)':'var(--green)'});
 
   document.getElementById('capBuildNote').innerHTML=
-    `Income is escalated at your expected salary and other-income increases; expenses are inflated at your Annual Inflation assumption. `+
-    (p.wantsInvest
-      ? `Each year's net amount is then carried to age ${p.retAge} at your ${fmt(p.regR*100,2).replace(/\.?0+$/,'')}% regular-investment return.`
-      : `Because you are not investing the surplus regularly, each year's net amount is carried forward at 0% — uninvested cash does not grow.`)+
-    (p.hasCommitments?` Each commitment escalates from today at its own rate, so a bill that first falls in a few years has already inflated by the time it arrives.`:'')+
-    ` Your family home share and other real estate of ${fP(p.realEstate)} are deliberately excluded from retirement capital and flow to the Estate Planning tab instead.`;
+    `What you already hold, plus what your cash flow adds between now and age ${p.retAge}. `+
+    (p.hasCommitments?`Your other expenses are taken out of the cash flow above before anything is invested, so a heavy tuition year leaves less to set aside. `:'')+
+    `Your family home share and other real estate of ${fP(p.realEstate)} are excluded here and flow to the Estate Planning tab instead.`;
 
-  renderBuildTable(p);
-}
-
-function renderBuildTable(p){
-  const tb=document.getElementById('preTb'); const tf=document.getElementById('preTf');
-  if(!tb) return;
-  if(!p.valid || p.rows.length===0){
-    tb.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--g400);padding:14px">Enter a valid age range to see the schedule.</td></tr>`;
-    if(tf)tf.innerHTML='';
-    return;
-  }
-  const neg=v=>v>=0?fP(v):'<span style="color:var(--ruby)">('+fP(Math.abs(v))+')</span>';
-  tb.innerHTML=p.rows.map(r=>`<tr>
-    <td>${r.y}</td><td>${r.age}</td><td>${fP(r.inc)}</td><td>${fP(r.exp)}</td>
-    <td>${r.cmt>0?'<b style="color:var(--gold-dk)">'+fP(r.cmt)+'</b>':'—'}</td>
-    <td>${r.red>0?fP(r.red):'—'}</td><td>${neg(r.net)}</td><td><b>${neg(r.fv)}</b></td>
-  </tr>`).join('');
-  if(tf){
-    const tInc=p.rows.reduce((a,r)=>a+r.inc,0);
-    const tExp=p.rows.reduce((a,r)=>a+r.exp,0);
-    const tRed=p.rows.reduce((a,r)=>a+r.red,0);
-    const tCmt=p.rows.reduce((a,r)=>a+r.cmt,0);
-    tf.innerHTML=`<tr><td colspan="2">Totals</td><td>${fP(tInc)}</td><td>${fP(tExp)}</td><td>${tCmt>0?fP(tCmt):'—'}</td><td>${tRed>0?fP(tRed):'—'}</td><td>${neg(tInc-tExp-tCmt-tRed)}</td><td><b>${neg(p.fvNetUninvested)}</b></td></tr>`;
-  }
-}
-
-function togglePreSink(){
-  const c=document.getElementById('preSinkCollapse');
-  const t=document.getElementById('preSinkToggle');
-  const open=c.classList.toggle('open');
-  t.classList.toggle('open',open);
-  t.childNodes[2].textContent=open?' Hide year-by-year schedule':' Show year-by-year schedule';
 }
 
 /* ── RETIREMENT RENDERS ── */
@@ -2584,13 +2549,69 @@ function renderScenarios(c){
   } else {
     maintainDesc.innerHTML=`If you want to maintain your monthly expense of ${fP(c.monthlyExpense)}/month, you should invest an additional amount of <span class="hl hl-gold">${fP(shortfall)}</span> on top of your existing retirement nest egg.`;
   }
-  document.getElementById('scMaintainStats').innerHTML=`
-    <div><div class="sc-stat-label">Additional Amount to Invest</div><div class="sc-stat-val ${shortfall>0?'gold':'green'}">${shortfall>0?fP(shortfall):'Fully funded'}</div></div>
-    <div><div class="sc-stat-label">Retirement Period</div><div class="sc-stat-val">${yrs} yrs</div></div>`;
+  /* ── Closing the gap: lump sum today, or a level annual amount ──
+   * The shortfall is already measured AT the retirement age, so:
+   *     lump today = shortfall / (1+i)^n
+   *     annual     = shortfall × i / ((1+i)^n − 1)          ordinary annuity
+   *     monthly    = shortfall × (i/12) / ((1+i/12)^(12n) − 1)
+   * The assumed return i is driven by the slider, which starts at the return on the
+   * client's current investments — the rate they are actually achieving today.
+   */
+  const yearsToRet = c.yearsToRet;
+  renderGapFunding(c, shortfall, yearsToRet);
 
-  renderTable('tb1','tf1',c.t1.rows,c.t1,false);
+  renderTable('tb1','tf1',c.t1.rows,c.t1,false);  renderTable('tb1','tf1',c.t1.rows,c.t1,false);
   renderTable('tb2','tf2',c.t2.rows,c.t2,false);
   renderTable('tb3','tf3',c.t3.rows,c.t3,true);
+}
+
+/* ── OPTION 2 GAP FUNDING (lump sum / annual / monthly at a chosen return) ── */
+let gapFundState=null;
+function renderGapFunding(c, shortfall, yearsToRet){
+  const box=document.getElementById('fundReturnBox');
+  const slider=document.getElementById('fundReturnSlider');
+  if(!box||!slider) return;
+
+  if(!(shortfall>0 && yearsToRet>0)){
+    box.style.display='none';
+    gapFundState=null;
+    document.getElementById('scMaintainStats').innerHTML=`
+      <div><div class="sc-stat-label">Additional Amount to Invest</div><div class="sc-stat-val ${shortfall>0?'gold':'green'}">${shortfall>0?fP(shortfall):'Fully funded'}</div></div>
+      <div><div class="sc-stat-label">Retirement Period</div><div class="sc-stat-val">${c.period} yrs</div></div>`;
+    return;
+  }
+
+  box.style.display='';
+  gapFundState={c,shortfall,yearsToRet};
+  // Start the slider at the return the client is already earning on their investments.
+  if(!slider.dataset.touched){
+    const start=c.now.invR*100;
+    slider.value = (start>0 && start<=15) ? start.toFixed(2) : 6;
+  }
+  updateGapFunding();
+  slider.oninput=()=>{slider.dataset.touched='1';updateGapFunding();};
+}
+function updateGapFunding(){
+  if(!gapFundState) return;
+  const {c,shortfall,yearsToRet}=gapFundState;
+  const slider=document.getElementById('fundReturnSlider');
+  const i=(parseFloat(slider.value)||0)/100;
+  const n=yearsToRet;
+
+  const lumpToday = shortfall/Math.pow(1+i,n);
+  const annual    = Math.abs(i)<1e-12 ? shortfall/n : shortfall*i/(Math.pow(1+i,n)-1);
+  const mI=i/12, mN=n*12;
+  const monthly   = Math.abs(mI)<1e-12 ? shortfall/mN : shortfall*mI/(Math.pow(1+mI,mN)-1);
+  const rTxt=fmt(i*100,2).replace(/\.?0+$/,'');
+
+  document.getElementById('fundReturnVal').textContent=rTxt+'%';
+  document.getElementById('fundReturnResult').innerHTML=
+    `At <strong>${rTxt}%</strong> p.a. over ${n} years, closing the ${fP(shortfall)} gap takes a lump sum of <strong style="color:var(--gold-dk)">${fP(lumpToday)}</strong> today — or <strong style="color:var(--gold-dk)">${fP(annual)} a year</strong> (about ${fP(monthly)} a month), ${fP(annual*n)} out of pocket in total.`;
+
+  document.getElementById('scMaintainStats').innerHTML=`
+    <div><div class="sc-stat-label">Needed at Age ${c.startAge}</div><div class="sc-stat-val gold">${fP(shortfall)}</div></div>
+    <div><div class="sc-stat-label">Lump Sum Today</div><div class="sc-stat-val gold">${fP(lumpToday)}</div><div class="sc-stat-pv">at ${rTxt}% p.a. for ${n} years</div></div>
+    <div><div class="sc-stat-label">Or Invest Annually from Age ${c.now.ageNow}</div><div class="sc-stat-val gold">${fP(annual)}/yr</div><div class="sc-stat-pv">${fP(monthly)}/mo equivalent</div></div>`;
 }
 
 function renderTable(tbId,tfId,rows,totals,isDepleted){
@@ -2598,7 +2619,7 @@ function renderTable(tbId,tfId,rows,totals,isDepleted){
   document.getElementById(tbId).innerHTML=rows.map(r=>{
     const dep=isDepleted&&r.depleted?' class="depleted"':'';
     // Mark years that carry a big or recurring commitment on top of the monthly budget.
-    const hc=r.cmt>0?`<span title="Includes ${fP(r.cmt)} of big / recurring commitments" style="color:var(--gold);font-weight:700"> *</span>`:'';
+    const hc='';
     return`<tr${dep}><td>${r.y}</td><td>${fP(r.annExp)}${hc}</td><td>${fP(r.incomeSrc)}</td><td>${neg(r.cap)}</td><td>${neg(r.endFund)}</td></tr>`;
   }).join('');
   const tf=document.getElementById(tfId);if(tf)tf.innerHTML='';
@@ -2626,7 +2647,7 @@ function renderEstate(e,c){
   if(finSub){
     finSub.innerHTML = e.capitalDepleted
       ? `Your Net Retirement Capital is not projected to leave any financial assets${atAge}, so only your real estate forms the estate.`
-      : `Net Retirement Capital${atAge} — carried in from the Retirement Planning tab. Your cash, deposits and investments today are already inside this figure.`;
+      : `Net Retirement Capital${atAge} — carried in from the Retirement Planning tab. Your deposits and investments today are already inside this figure.`;
   }
   document.getElementById('eNonFinancial').textContent=fP(e.nonFinancial);
   const nfSub=document.getElementById('eNonFinancialSub');
@@ -2926,9 +2947,13 @@ function updateSlider(c){
   const gap=Math.max(0,annual-c.estAnnualInflow);
   let yrs=0;
   if(gap<=0&&!c.hasRetCommit){yrs=c.period;}else if(c.netCash>0){let f=c.netCash;for(let y=1;y<=100;y++){const w=gap*Math.pow(1+c.inf,y-1)+c.cmtAt(y);f=f*(1+c.r)-w;if(f<=0){yrs=y-1;break;}yrs=y;}}
-  const isSafe=yrs>=c.period;const diff=monthly-c.sustainableExpense/12;
-  const diffText=diff>0?`${fP(diff)}/mo more than the sustainable level`:diff<0?`${fP(Math.abs(diff))}/mo below the sustainable level`:'exactly at the sustainable level';
-  document.getElementById('adjResult').innerHTML=`At <strong>${fP(monthly)}/month</strong>, your nest egg will last approximately <strong style="color:${isSafe?'var(--green)':'var(--ruby)'}">${yrs>=c.period?c.period+'+':yrs} years</strong>. That is ${diffText}.`;
+  const isSafe=yrs>=c.period;
+  // The slider moves in retirement-age pesos; show what that buys in today's money.
+  const pvEl=document.getElementById('sliderValPv');
+  if(pvEl) pvEl.textContent = c.yearsToRet>0 ? fP(monthly/Math.pow(1+c.inf,c.yearsToRet))+'/mo today' : '';
+  document.getElementById('adjResult').innerHTML=`At <strong>${fP(monthly)}/month</strong>`+
+    (c.yearsToRet>0?` — about <strong>${fP(monthly/Math.pow(1+c.inf,c.yearsToRet))}/month</strong> in today's prices —`:'')+
+    ` your nest egg will last approximately <strong style="color:${isSafe?'var(--green)':'var(--ruby)'}">${yrs>=c.period?c.period+'+':yrs} years</strong>.`;
   if(lastR){const t2new=lastR.buildT2(annual);renderTable('tb2','tf2',t2new.rows,t2new,false);}
 }
 
@@ -2962,17 +2987,17 @@ function switchSink(idx,btn){
 
 /* ── RESET ── */
 function resetForm(){
-  ['nowCash','nowDeposits','nowDepositsRate','nowInvestments','nowInvestRate',
+  ['nowDeposits','nowDepositsRate','nowInvestments','nowInvestRate',
    'familyHomeValue','familyHomeOtherOwners','otherRealEstate',
-   'salaryMonthly','otherIncomeNow','livingExpense','interestExpense','otherExpenseNow',
-   'regularInvestAmt','monthlyExpense','cashAvailable','liabilities','specialAllotment',
+   'salaryMonthly','otherIncomeNow','livingExpense',
+   'monthlyExpense','cashAvailable','liabilities','specialAllotment',
    'ageNow'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('age').value='60';
-  document.getElementById('nowCashRate').value='0.05';
-  document.getElementById('salaryGrowth').value='5';
+  document.getElementById('salaryGrowth').value='3.5';
   document.getElementById('otherIncomeGrowth').value='3';
   document.getElementById('regularInvestRate').value='6';
-  document.getElementById('investSurplus').value='No';
+  document.getElementById('regularInvestPct').value='50';
+  document.getElementById('investSurplus').value='Yes';
   const cl=document.getElementById('cmtList'); if(cl)cl.innerHTML='';
   document.getElementById('expenseMode').value='computed';
   document.getElementById('monthlyIncome').value='10,000';
@@ -3026,16 +3051,13 @@ function downloadPDF(){
         <div>
           <div class="pdf-row"><span class="pdf-row-lbl">Age Now</span><span class="pdf-row-val">${c.now.valid?c.now.ageNow:'—'}</span></div>
           <div class="pdf-row"><span class="pdf-row-lbl">Desired Retirement Age</span><span class="pdf-row-val">${c.startAge}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Cash</span><span class="pdf-row-val">${fP(c.now.cash)} @ ${(c.now.cashR*100).toFixed(2)}%</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Deposits / Time Deposits</span><span class="pdf-row-val">${fP(c.now.dep)} @ ${(c.now.depR*100).toFixed(2)}%</span></div>
+          <div class="pdf-row"><span class="pdf-row-lbl">Deposits</span><span class="pdf-row-val">${fP(c.now.dep)} @ ${(c.now.depR*100).toFixed(2)}%</span></div>
           <div class="pdf-row"><span class="pdf-row-lbl">Investments</span><span class="pdf-row-val">${fP(c.now.inv)} @ ${(c.now.invR*100).toFixed(2)}%</span></div>
           <div class="pdf-row"><span class="pdf-row-lbl">Monthly Salary</span><span class="pdf-row-val">${fP(c.now.salary)} (+${(c.now.gS*100).toFixed(2)}% p.a.)</span></div>
           <div class="pdf-row"><span class="pdf-row-lbl">Monthly Other Income</span><span class="pdf-row-val">${fP(c.now.othInc)} (+${(c.now.gO*100).toFixed(2)}% p.a.)</span></div>
           <div class="pdf-row"><span class="pdf-row-lbl">Monthly Living Expense</span><span class="pdf-row-val">${fP(c.now.living)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Monthly Interest Expense</span><span class="pdf-row-val">${fP(c.now.interest)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Other Monthly Expenses</span><span class="pdf-row-val">${fP(c.now.othExp)}</span></div>
           <div class="pdf-row"><span class="pdf-row-lbl">Net Monthly Cash Flow</span><span class="pdf-row-val">${c.now.netMonthly<0?'('+fP(Math.abs(c.now.netMonthly))+')':fP(c.now.netMonthly)}</span></div>
-          <div class="pdf-row"><span class="pdf-row-lbl">Regular Investment</span><span class="pdf-row-val">${c.now.wantsInvest?fP(c.now.regAmt)+'/mo @ '+(c.now.regR*100).toFixed(2)+'%':'None'}</span></div>
+          <div class="pdf-row"><span class="pdf-row-lbl">Regular Investment</span><span class="pdf-row-val">${c.now.wantsInvest?(c.now.regPct*100).toFixed(0)+'% of cash flow @ '+(c.now.regR*100).toFixed(2)+'%':'None'}</span></div>
           ${c.now.commitments.filter(cm=>cm.annual>0).map(cm=>`<div class="pdf-row"><span class="pdf-row-lbl">${cm.label}</span><span class="pdf-row-val">${fP(cm.annual)}/yr · ${cm.start<=0?'now':'in '+cm.start+' yrs'} · ${cm.oneTime?'one-time':(cm.ongoing?'ongoing':cm.years+' yrs')} · ${(cm.rate*100).toFixed(2)}% · ${cm.cont?'continues':'stops at retirement'}</span></div>`).join('')}
         </div>
         <div>
@@ -3153,12 +3175,6 @@ function downloadPDF(){
       <p style="font-size:7.5pt;color:#666;margin-top:4pt">The estate is measured at the retirement age: financial assets are the Net Retirement Capital, which then draws down under the Default (no additional investment) scenario. Real estate keeps appreciating at ${(e.propG*100).toFixed(2)}% p.a. throughout. Same TRAIN Law deductions${e.hasSpouse?' and ½ conjugal share':''} applied at each point. For illustration only.</p>
     </div>
 
-    <div class="pdf-contact">
-      <div class="pdf-contact-hd">Your BPI Personal Wealth Advisor</div>
-      <div class="pdf-contact-name">Neena Tengco</div>
-      <div class="pdf-contact-row"><strong>Mobile:</strong> 0918-944-7983 &nbsp;&nbsp;·&nbsp;&nbsp; <strong>Email:</strong> srtengco@bpi.com.ph</div>
-    </div>
-
     <div class="pdf-footer">
       <strong>Disclaimer:</strong> The RetireReady Calculator is provided solely for general informational and educational purposes. It does not constitute legal, tax, financial, or investment advice. You should consult a qualified Philippine lawyer, CPA, or financial advisor for advice tailored to your specific circumstances.<br><br>
       Use of the RetireReady Calculator does not create any attorney-client, accountant-client, fiduciary, or other professional relationship between you and BPI Wealth, or any of its affiliates.<br><br>
@@ -3172,8 +3188,8 @@ function downloadPDF(){
 }
 
 /* ── EVENT WIRING ── */
-const CURRENCY_INPUT_IDS=['nowCash','nowDeposits','nowInvestments','familyHomeValue','otherRealEstate','salaryMonthly','otherIncomeNow','livingExpense','interestExpense','otherExpenseNow','regularInvestAmt','monthlyIncome','monthlyExpense','cashAvailable','liabilities','specialAllotment'];
-const OTHER_INPUT_IDS=['ageNow','age','legallyMarried','nowCashRate','nowDepositsRate','nowInvestRate','familyHomeOtherOwners','salaryGrowth','otherIncomeGrowth','regularInvestRate','retirementPeriod','netReturnPA','inflation','propertyGrowth','legitChildren','illegitChildren','survivingSpouse','legitParents','illegitParents'];
+const CURRENCY_INPUT_IDS=['nowDeposits','nowInvestments','familyHomeValue','otherRealEstate','salaryMonthly','otherIncomeNow','livingExpense','monthlyIncome','monthlyExpense','cashAvailable','liabilities','specialAllotment'];
+const OTHER_INPUT_IDS=['ageNow','age','legallyMarried','nowDepositsRate','nowInvestRate','familyHomeOtherOwners','salaryGrowth','otherIncomeGrowth','regularInvestPct','regularInvestRate','retirementPeriod','netReturnPA','inflation','propertyGrowth','legitChildren','illegitChildren','survivingSpouse','legitParents','illegitParents'];
 
 CURRENCY_INPUT_IDS.forEach(id=>{
   const el=document.getElementById(id);if(!el)return;
@@ -3251,28 +3267,6 @@ if(_retSlider){
       note=`At a <b>${fmt(rv)}%</b> return, having no additional investment sustains your desired spending for about <b>${fd} ${fd===1?'year':'years'}</b> — ${per-fd} short of your ${per}-year period.`;
     }
     document.getElementById('retSliderNote').innerHTML=note;
-  });
-}
-
-// ── PRE-RETIREMENT RETURN SLIDER ──
-// Live what-if: override the pre-retirement return, mirror it into the input field,
-// and re-render so all three pre-retirement options and the schedule stay in sync.
-const _preSlider=document.getElementById('preSlider');
-if(_preSlider){
-  _preSlider.addEventListener('input',()=>{
-    if(!lastP)return;
-    const rv=parseFloat(_preSlider.value);
-    const fmt=x=>x.toFixed(2).replace(/\.?0+$/,'');
-    document.getElementById('regularInvestRate').value=fmt(rv);
-    render();
-    const p=lastP;
-    let note;
-    if(!p.validHorizon){
-      note=`Enter a valid age range to project growth at <b>${fmt(rv)}%</b>.`;
-    } else {
-      note=`At a <b>${fmt(rv)}%</b> pre-retirement return over <b>${p.x} years</b>, your plan is projected to grow to <b>${fP(p.projectedFund)}</b> by age ${p.retAge}.`;
-    }
-    document.getElementById('preSliderNote').innerHTML=note;
   });
 }
 
