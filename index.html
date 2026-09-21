@@ -651,7 +651,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
             <div><label class="q-lbl">How much is placed in deposits?</label>
               <div class="fi"><span class="pre">₱</span><input type="text" id="nowDeposits" class="pl num-input" placeholder="0" inputmode="numeric"></div>
             </div>
-            <div><label class="q-lbl">Rate p.a.</label>
+            <div><label class="q-lbl">Est. net return p.a.</label>
               <div class="fi"><input type="number" id="nowDepositsRate" class="pr" value="0.05" min="0" max="30" step="0.01"><span class="suf">%</span></div>
             </div>
           </div>
@@ -664,7 +664,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
             <div><label class="q-lbl">How much is in investments?</label>
               <div class="fi"><span class="pre">₱</span><input type="text" id="nowInvestments" class="pl num-input" placeholder="0" inputmode="numeric"></div>
             </div>
-            <div><label class="q-lbl">Est. return p.a.</label>
+            <div><label class="q-lbl">Est. net return p.a.</label>
               <div class="fi"><input type="number" id="nowInvestRate" class="pr" placeholder="0" min="0" max="30" step="0.1"><span class="suf">%</span></div>
             </div>
           </div>
@@ -685,7 +685,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
         <div class="field" style="margin-bottom:0">
           <label class="q-lbl">Other Real Estate (Estimated Value)</label>
           <div class="fi"><span class="pre">₱</span><input type="text" id="otherRealEstate" class="pl num-input" placeholder="0" inputmode="numeric"></div>
-          <div class="hint">e.g. other land, condominiums, investment property. Real estate is carried into Estate Planning but is <b>not</b> counted as retirement capital.</div>
+          <div class="hint">e.g. other land, condominiums, investment property. Indicate your share in the real estate. This will be carried into the computation for Estate Planning, but is <b>not</b> counted as retirement capital.</div>
         </div>
 
       </div>
@@ -754,11 +754,11 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
         <div id="investFields">
           <div class="field-row-ar" style="margin-bottom:0">
             <div class="field" style="margin-bottom:0">
-              <label class="q-lbl">How much of your cash flow would you like to invest?</label>
+              <label class="q-lbl">How much % of your cash flow would you like to invest?</label>
               <div class="fi"><input type="number" id="regularInvestPct" class="pr" value="50" min="0" max="100" step="1"><span class="suf">%</span></div>
             </div>
             <div class="field" style="margin-bottom:0">
-              <label class="q-lbl">Est. return p.a.</label>
+              <label class="q-lbl">Est. net return p.a.</label>
               <div class="fi"><input type="number" id="regularInvestRate" class="pr" value="6" min="0" max="30" step="0.1"><span class="suf">%</span></div>
             </div>
           </div>
@@ -869,7 +869,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
             <div class="fi"><input type="number" id="retirementPeriod" class="pr" value="20" min="1" max="50"><span class="suf" style="font-size:.62rem">yrs</span></div>
           </div>
           <div class="field">
-            <label class="q-lbl">Estimated net return p.a. of retirement fund<sup>3</sup></label>
+            <label class="q-lbl">Est. net return p.a. of retirement fund<sup>3</sup></label>
             <div class="fi"><input type="number" id="netReturnPA" class="pr" value="4.25" min="0" max="30" step="0.1"><span class="suf">%</span></div>
           </div>
         </div>
@@ -1072,7 +1072,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
             <div class="sc-stats" id="scMaintainStats"></div>
           </div>
           <div class="adjuster" id="fundReturnBox">
-            <span class="adjuster-label">Assumed return on what you invest to close the gap:</span>
+            <span class="adjuster-label">Est. net return p.a. on what you invest to close the gap:</span>
             <div class="slider-wrap">
               <input type="range" id="fundReturnSlider" min="0" max="15" step="0.25" value="6">
               <span class="slider-val" id="fundReturnVal">6%</span>
@@ -1123,7 +1123,7 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
         </div>
         <div class="ret-slider">
           <div class="ret-slider-top">
-            <span class="ret-slider-label">Estimated net return p.a. of retirement fund</span>
+            <span class="ret-slider-label">Est. net return p.a. of retirement fund</span>
             <span class="ret-slider-val" id="retSliderVal">4.0%</span>
           </div>
           <input type="range" id="retSlider" min="0" max="12" step="0.25" value="4">
