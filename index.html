@@ -821,9 +821,10 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
           <input type="hidden" id="expenseMode" value="computed">
           <div class="calcchip" id="expComputedChip">Computed monthly expense at retirement: <b id="expComputedVal">₱0</b><span id="expComputedNote"></span></div>
           <div id="expenseOwnField" style="display:none;margin-top:8px">
-            <label class="q-lbl">Your own monthly expense at retirement age</label>
+            <label class="q-lbl">Your own monthly expense, in today's value</label>
             <div class="fi"><span class="pre">₱</span><input type="text" id="monthlyExpense" class="pl num-input" placeholder="0" inputmode="numeric"></div>
-            <div class="hint">Enter this in <b>retirement-age pesos</b> — it replaces the computed figure above and is not inflated again.</div>
+            <div class="hint">Enter what this lifestyle costs <b>today</b> — it is inflated to your retirement age at your Annual Inflation rate, and replaces the computed figure above.</div>
+            <div class="calcchip" id="expOwnChip" style="display:none"></div>
           </div>
         </div>
 
@@ -1345,8 +1346,8 @@ footer{text-align:center;padding:18px;color:var(--g400);font-size:.69rem;border-
  *  Tab 3 (Estate Planning) only.
  *
  * TAB 2 — RETIREMENT PLANNING
- *  monthlyExpense     = livingExpenseToday × (1+inf)^x   [or the advisor's own figure,
- *                       already stated in retirement-age pesos]
+ *  monthlyExpense     = expenseToday × (1+inf)^x   [expenseToday = this year's living
+ *                       expense, or the advisor's own figure — both in today's pesos]
  *  annualIncome       = other sources of income during retirement × 12
  *  annualExpense      = monthlyExpense × 12
  *  annualGap          = annualExpense − annualIncome
@@ -1743,7 +1744,7 @@ function computeNow(rateOverride){
 
 /* ── RETIREMENT COMPUTE (TAB 2) ──
  *  monthlyExpense     = living expense today × (1+inflation)^(retAge − ageNow)
- *                       [or the advisor's own figure, already in retirement-age pesos]
+ *                       [or the advisor's own figure, also in today's pesos and inflated]
  *  annualIncome       = other sources of income during retirement × 12
  *  annualGap          = annualExpense − annualIncome
  *  netCash            = expected retirement pay
@@ -1762,15 +1763,19 @@ function computeRetirement(rOverride){
   const now = computeNow();
 
   /* ── Monthly expense during retirement ──
-     Default: this year's LIVING expense grown to the retirement age at annual inflation.
-     The advisor can override it with a figure already stated in retirement-age pesos. */
+     Both routes start from a figure in TODAY'S pesos and grow it to the retirement age at
+     annual inflation. By default that figure is this year's living expense; the advisor
+     can replace it with their own estimate of the retirement lifestyle, still in today's
+     value, and it is inflated the same way. */
   const livingToday          = gv('livingExpense');
   const yearsToRet           = H.x;
   const expInflFactor        = Math.pow(1+inf, yearsToRet);
   const computedMonthlyExp   = livingToday*expInflFactor;
   const expenseMode          = gvS('expenseMode')||'computed';
   const usedOwnExpense       = expenseMode==='own' && hasVal('monthlyExpense');
-  const monthlyExpense       = usedOwnExpense ? gv('monthlyExpense') : computedMonthlyExp;
+  const ownToday             = gv('monthlyExpense');
+  const expenseToday         = usedOwnExpense ? ownToday : livingToday;
+  const monthlyExpense       = expenseToday*expInflFactor;
 
   const monthlyIncome  = gv('monthlyIncome');
   const cashAvail      = gv('cashAvailable');       // expected retirement pay
@@ -1902,7 +1907,7 @@ function computeRetirement(rOverride){
   return {
     now, capitalFromNow,
     monthlyIncome,monthlyExpense,monthlyLiving:monthlyExpense,monthlyRent:0,healthcare,oneTimeInflow:0,
-    monthlyExpenseToday:livingToday, computedMonthlyExp, expenseMode, usedOwnExpense,
+    monthlyExpenseToday:expenseToday, computedMonthlyExp, expenseMode, usedOwnExpense,
     yearsToRet,expInflFactor,
     hasAssets: now.hasInputs || hasVal('cashAvailable'),
     cashAvail,currentInvest:now.inv,returnPA:now.invR,liabilities,specialAllot,
@@ -2289,6 +2294,17 @@ function syncExpenseUI(){
   }
   const chip=document.getElementById('expComputedChip');
   if(chip)chip.style.opacity = v==='own' ? '.55' : '1';
+
+  const ownChip=document.getElementById('expOwnChip');
+  if(ownChip){
+    const own=gv('monthlyExpense');
+    if(v==='own' && own>0){
+      ownChip.style.display='';
+      ownChip.innerHTML = H.x>0
+        ? `At your retirement age: <b>${fP(own*Math.pow(1+inf,H.x))}</b> — ${fP(own)} today, grown over ${H.x} years at ${fmt(inf*100,2)}% inflation.`
+        : `Used as entered. Enter your Age Now to inflate it to your retirement age.`;
+    } else ownChip.style.display='none';
+  }
 }
 
 // Sync the Visual Overview returns slider to the current net-return field value
@@ -2545,7 +2561,7 @@ function renderScenarios(c){
   const netY1=c.incomeSources-(c.targetAnnualExpense+c.cmtAt(1)); // year 1, with commitments
   document.getElementById('gapBox').innerHTML=`
     <div class="gap-row"><span class="gr-lbl">Estimated annual expense<span class="gr-sub">monthly expense at retirement age × 12</span></span><span class="gr-val">(${fP(c.targetAnnualExpense)})</span></div>
-    <div class="gap-row indent sub-detail"><span class="gr-lbl">Monthly expense at age ${c.startAge}${c.usedOwnExpense?' (your own figure)':` — ${fP(c.monthlyExpenseToday)} today, inflated over ${c.yearsToRet} years`}</span><span class="gr-val">(${fP(c.monthlyExpense)})</span></div>
+    <div class="gap-row indent sub-detail"><span class="gr-lbl">Monthly expense at age ${c.startAge}${` — ${fP(c.monthlyExpenseToday)} today${c.usedOwnExpense?' (your own figure)':''}, inflated over ${c.yearsToRet} years`}</span><span class="gr-val">(${fP(c.monthlyExpense)})</span></div>
     ${c.hasRetCommit?`<div class="gap-row"><span class="gr-lbl">Add: Big &amp; recurring commitments continuing into retirement<span class="gr-sub">${c.retCommitments.filter(cm=>cm.annual>0).map(cm=>cm.label).join(', ')} — ${fP(c.cmtAt(1))} in year 1, ${fP(c.nominalRetCommit)} over the full ${c.period} years</span></span><span class="gr-val">(${fP(c.cmtAt(1))})</span></div>
     <div class="gap-row"><span class="gr-lbl">Total year-1 expense</span><span class="gr-val">(${fP(c.targetAnnualExpense+c.cmtAt(1))})</span></div>`:''}
     <div class="gap-row"><span class="gr-lbl">Add: Income sources during retirement</span><span class="gr-val">${fP(c.incomeSources)}</span></div>
@@ -3163,7 +3179,7 @@ function downloadPDF(){
             : row('None recorded','—')}
 
           <div class="pdf-stat-label" style="margin:7pt 0 3pt">Retirement Planning</div>
-          ${row('Monthly expense at age '+c.startAge, fP(c.monthlyExpense)+(c.usedOwnExpense?' (entered)':' (computed)'))}
+          ${row('Monthly expense at age '+c.startAge, fP(c.monthlyExpense)+(c.usedOwnExpense?' (own figure '+fP(c.monthlyExpenseToday)+' today, inflated)':' (computed)'))}
           ${row('Other income during retirement', fP(c.monthlyIncome)+'/mo')}
           ${row('Expected retirement pay', fP(c.cashAvail))}
           ${row('Outstanding liabilities', fP(c.liabilities))}
